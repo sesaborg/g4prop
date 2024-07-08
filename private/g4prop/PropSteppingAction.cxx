@@ -5,9 +5,9 @@
 
 PropSteppingAction::PropSteppingAction() : G4UserSteppingAction(), fKineticEnergyMin(0), fCulledEnergy(0) {}
 
-PropSteppingAction::~PropSteppingAction() {}
+PropSteppingAction::~PropSteppingAction() = default;
 
-void PropSteppingAction::UserSteppingAction {const G4Step* step) {
+void PropSteppingAction::UserSteppingAction (const G4Step* step) {
 	G4Track* track = step->GetTrack();
 	G4double kineticEnergy = track->GetKineticEnergy();
 	
@@ -18,4 +18,4 @@ void PropSteppingAction::UserSteppingAction {const G4Step* step) {
 		
 		// I3MCTree goes here
 	}
-}
+};

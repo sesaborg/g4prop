@@ -1,1 +1,3 @@
-from icecube._g4prop import *
+from icecube.icetray import load
+load("g4prop", False)
+del load

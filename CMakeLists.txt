@@ -10,7 +10,7 @@ SET(LIB_${PROJECT_NAME}_SOURCEFILES
         private/g4prop/PropRunAction.cxx
         private/g4prop/PropStackingAction.cxx
         private/g4prop/PropSteppingAction.cxx
-        private/g4prop/PropTrackingAction.cxx
+        # private/g4prop/PropTrackingAction.cxx
 
         # Icetray-specific bindings
         private/I3G4PropParticleTree.cxx

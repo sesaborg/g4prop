@@ -16,7 +16,7 @@ PropDetectorConstruction::~PropDetectorConstruction() = default;
 G4VPhysicalVolume *PropDetectorConstruction::Construct()
 {
     auto nist = G4NistManager::Instance();
-    nist->SetVerbose(4);
+    nist->SetVerbose(0);
     G4Material *water = nist->FindOrBuildMaterial("G4_WATER");
     const size_t entries = 2;
     G4double PhotonEnergy[entries] = {1 * eV, 10 * eV};

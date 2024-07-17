@@ -2,6 +2,8 @@
 #define PROPSTEPPINGACTION_H
 #include "G4UserSteppingAction.hh"
 #include "globals.hh"
+// #include "boost/graph/graph_traits.hpp"
+// #include "boost/graph/undirected_graph.hpp"
 
 namespace G4Prop
 {

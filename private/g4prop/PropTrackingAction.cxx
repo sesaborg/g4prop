@@ -1,36 +1,37 @@
-#include "G4HadronicProcess.hh"
-#include "PropTrackingAction.hh"
-#include "G4TrackStatus.hh"
+// #include "G4HadronicProcess.hh"
+// #include "PropTrackingAction.hh"
+// #include "G4TrackStatus.hh"
+// #include "g4prop/G4PropParticleTree.hh"
 
-using namespace G4Prop;
+// using namespace G4Prop;
 
-PropTrackingAction::PropTrackingAction() : G4UserTrackingAction(), fCulledEnergy(0) {}
+// PropTrackingAction::PropTrackingAction() : G4UserTrackingAction(), fCulledEnergy(0) {}
 
-PropTrackingAction::PropTrackingAction(G4double kineticEnergyMin) : PropTrackingAction()
-{
-	fKineticEnergyMin = kineticEnergyMin;
-}
+// PropTrackingAction::PropTrackingAction(G4double kineticEnergyMin) : PropTrackingAction()
+// {
+// 	fKineticEnergyMin = kineticEnergyMin;
+// }
 
-void PropTrackingAction::PreUserTrackingAction(const G4Track *track)
-{
-}
+// void PropTrackingAction::PreUserTrackingAction(const G4Track *track)
+// {
+// }
 
-void PropTrackingAction::PostUserTrackingAction(const G4Track *track)
-{
-	const G4TrackVector *secondaries = track->GetStep()->GetSecondary();
+// void PropTrackingAction::PostUserTrackingAction(const G4Track *track)
+// {
+// 	const G4TrackVector *secondaries = track->GetStep()->GetSecondary();
 
-	for (auto secondaryTrack : *secondaries)
-	{
-		G4double kineticEnergy = secondaryTrack->GetKineticEnergy();
+// 	for (auto secondaryTrack : *secondaries)
+// 	{
+// 		G4double kineticEnergy = secondaryTrack->GetKineticEnergy();
 
-		if (kineticEnergy < fKineticEnergyMin)
-		{
-			fCulledEnergy += kineticEnergy;
-			secondaryTrack->SetTrackStatus(fStopAndKill);
+// 		if (kineticEnergy < fKineticEnergyMin)
+// 		{
+// 			fCulledEnergy += kineticEnergy;
+// 			secondaryTrack->SetTrackStatus(fStopAndKill);
+// 		}
+// 	}
 
-			// I3MCTree code goes here
-		}
-	}
-}
+// 	fG4Tree.
+// }
 
-PropTrackingAction::~PropTrackingAction() = default;
+// PropTrackingAction::~PropTrackingAction() = default;

@@ -11,6 +11,20 @@ class I3G4PropModule : public I3ConditionalModule
 public:
     I3G4PropModule(const I3Context &context) : I3ConditionalModule(context)
     {
+        uiCommands_ = std::vector<std::string>({
+            "/process/optical/cerenkov/setMaxPhotons 20",
+            "/process/optical/cerenkov/setMaxBetaChange 40",
+            "/tracking/verbose 0",
+            "/process/optical/cerenkov/setTrackSecondariesFirst false", // Tracking secondaries first introduces splits tracks into multiple parts with identical IDs, not ideal.
+        });
+        AddParameter("Geant4Commands",
+                     "Commands to pass to the Geant4 UI manager.",
+                     uiCommands_);
+
+        reserveLength_ = 10000;
+        AddParameter("ReserveLength",
+                     "Number of Tracks/Particles to allocate space for at a time in their respective vectors.",
+                     reserveLength_);
     }
 
     virtual ~I3G4PropModule();
@@ -35,6 +49,8 @@ private:
     I3G4PropModule(const I3G4PropModule &);
     I3G4PropModule &operator=(const I3G4PropModule &);
     bool configured = false;
+    std::vector<std::string> uiCommands_;
+    size_t reserveLength_;
 };
 
 #endif // I3G4PROPMODULE_HH

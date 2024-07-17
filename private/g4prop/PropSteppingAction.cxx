@@ -2,7 +2,6 @@
 #include "G4Step.hh"
 #include "G4TrackStatus.hh"
 #include "G4SteppingManager.hh"
-// #include "boost/graph/undirected_graph.hpp"
 
 using namespace G4Prop;
 

@@ -5,6 +5,7 @@
 #include "icetray/I3ConditionalModule.h"
 #include "icetray/I3Module.h"
 #include "g4prop/G4Prop.hh"
+#include <boost/bimap.hpp>
 
 class I3G4PropModule : public I3ConditionalModule
 {
@@ -51,6 +52,7 @@ private:
     bool configured = false;
     std::vector<std::string> uiCommands_;
     size_t reserveLength_;
+    // void InsertToTree(boost::shared_ptr<I3MCTree> &, const std::map<G4int, std::vector<G4int>> *, const boost::bimap<I3ParticleID, G4int> *, const std::map<I3ParticleID, I3Particle> *, const I3ParticleID &);
 };
 
 #endif // I3G4PROPMODULE_HH

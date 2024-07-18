@@ -118,6 +118,11 @@ namespace G4Prop
 		return ((PropTrackingAction *)(runManager->GetUserTrackingAction()))->GetTracks();
 	}
 
+	std::map<G4int, boost::shared_ptr<std::vector<G4int>>> &GetTrackToSecondariesMap()
+	{
+		return ((PropTrackingAction *)(runManager->GetUserTrackingAction()))->GetTrackToSecondariesMap();
+	}
+
 	// G4RunManager *GetG4RunManager() { return runManager; }
 	// G4UImanager *GetG4UImanager() { return uiManager; }
 	// G4VisManager *GetG4VisManager() { return visManager; }

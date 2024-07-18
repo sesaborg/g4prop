@@ -8,8 +8,6 @@
 #include "G4SystemOfUnits.hh"
 #include "G4OpticalParameters.hh"
 
-#include <boost/bimap.hpp>
-
 typedef I3G4PropModule g4prop;
 namespace
 {
@@ -137,10 +135,13 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                 G4Prop::RunGeant4(particleGun, uiCommands_);
 
                 std::vector<G4Track *> tracks = G4Prop::GetTracks();
-                std::vector<I3Particle> particles;
+                // std::vector<I3Particle> particles;
+                std::map<I3ParticleID, I3Particle> particleMap;
                 boost::bimap<I3ParticleID, G4int> particleToTrackMap;
                 std::map<G4int, G4int> trackToParentMap;
-                std::map<G4int, std::vector<G4int>> trackToChildMap;
+                std::map<G4int, boost::shared_ptr<std::vector<G4int>>> &trackToSecondariesMap = G4Prop::GetTrackToSecondariesMap();
+
+                // log_info("%lu", trackToSecondariesMap.size());
 
                 // Definition of an operator to compare G4Track* by their TrackID, for use in std::sort.
                 struct
@@ -156,6 +157,7 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                     {
                         // Special case where the primary particle in Geant4 is the same as the original particle.
                         particleToTrackMap.insert({originalParticle.GetID(), track->GetTrackID()});
+                        particleMap.insert({originalParticle.GetID(), originalParticle});
                         // log_info("Inserted originalParticleID = %i, trackID = %i", originalParticle.GetID().minorID, track->GetTrackID());
                         continue;
                     }
@@ -185,7 +187,7 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                         //          particle.HasMass() ? particle.GetMass() / (I3Units::MeV / (I3Constants::c * I3Constants::c)) : NAN,
                         //          particle.GetPdgEncoding());
 
-                        particles.insert(particles.end(), particle);
+                        // particles.insert(particles.end(), particle);
                         // trackToParentMap.insert({track->GetTrackID(), track->GetParentID()});
                         // if (track->GetParentID() == 1) {
 
@@ -193,7 +195,7 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                         particleToTrackMap.insert({particle.GetID(), track->GetTrackID()});
                         // log_info("Inserted particleID = %i, trackID = %i", particle.GetID().minorID, track->GetTrackID());
                         trackToParentMap.insert({track->GetTrackID(), track->GetParentID()});
-
+                        particleMap.insert({particle.GetID(), particle});
                         // trackToChildMap.insert({track->GetTrackID(), track->Get})
 
                         // log_info("trackID: %i  parentID: %i  minorID: %i", track->GetTrackID(), track->GetParentID(), particle.GetID().minorID);
@@ -202,23 +204,54 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
 
                 // The primary particle should be the first, with the particle vector being sorted by TrackID.
 
-                log_info("There are %lu particles to insert.", particles.size());
+                log_info("There are %lu particles to insert.", particleMap.size());
+                // InsertToTree(newI3MCTree, &trackToSecondariesMap, &particleToTrackMap, &particleMap, originalParticle.GetID());
+                // for (size_t i = 0; i < particles.size(); i++)
+                // {
+                //     // log_info("Inserting node...");
+                //     // log_info("\nHere we have a particle known as:\n\tmajorID: %lu\n\tminorID: %i", particles.at(i).GetMajorID(), particles.at(i).GetMinorID());
+                //     I3ParticleID id = particles.at(i).GetID();
+                //     // log_info("id = %i", id.minorID);
+                //     G4int trackID = particleToTrackMap.left.at(id);
+                //     if (trackToSecondariesMap.find(trackID))
+                //     // log_info("trackID = %i", trackID);
+                //     G4int parentID = trackToParentMap.at(trackID);
+                //     // log_info("parentID = %i", parentID);
+                //     I3ParticleID parentParticleID = particleToTrackMap.right.at(parentID);
+                //     // log_info("parentParticleID = %i", parentParticleID.minorID);
+                //     // log_info("trackID: %i  parentID: %i  minorID: %i  parentMinorID: %i", trackID, parentID, id.minorID, parentParticleID.minorID);
+                //     newI3MCTree->append_child(parentParticleID, particles[i]);
 
-                for (size_t i = 0; i < particles.size(); i++)
+                //     newI3MCTree->append_children()
+                // }
+                std::function<void(const I3ParticleID &)> insertToTree = [newI3MCTree, particleToTrackMap, particleMap, trackToSecondariesMap, &insertToTree](const I3ParticleID &id)
                 {
-                    // log_info("Inserting node...");
-                    // log_info("\nHere we have a particle known as:\n\tmajorID: %lu\n\tminorID: %i", particles.at(i).GetMajorID(), particles.at(i).GetMinorID());
-                    I3ParticleID id = particles.at(i).GetID();
-                    // log_info("id = %i", id.minorID);
                     G4int trackID = particleToTrackMap.left.at(id);
-                    // log_info("trackID = %i", trackID);
-                    G4int parentID = trackToParentMap.at(trackID);
-                    // log_info("parentID = %i", parentID);
-                    I3ParticleID parentParticleID = particleToTrackMap.right.at(parentID);
-                    // log_info("parentParticleID = %i", parentParticleID.minorID);
-                    // log_info("trackID: %i  parentID: %i  minorID: %i  parentMinorID: %i", trackID, parentID, id.minorID, parentParticleID.minorID);
-                    newI3MCTree->append_child(parentParticleID, particles[i]);
-                }
+                    boost::shared_ptr<std::vector<G4int>> secondaryTrackIDs = trackToSecondariesMap.at(trackID);
+                    // log_info("Insert To Tree %i %lu", trackID, secondaryTrackIDs->size());
+                    // log_info("%i %lu", trackID, secondaryTrackIDs->size());
+                    std::vector<I3Particle> secondaryParticles;
+                    // BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
+                    // {
+                    //     log_info("%i", secondaryTrackID);
+                    //     // secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
+                    // }
+
+                    BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
+                    {
+                        // log_info("%i", secondaryTrackID);
+                        secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
+                    }
+
+                    newI3MCTree->append_children(id, secondaryParticles);
+
+                    BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
+                    {
+                        insertToTree(secondaryParticle.GetID());
+                    }
+                };
+
+                insertToTree(originalParticle.GetID());
             }
             else
             {
@@ -234,6 +267,27 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
     PushFrame(frame);
     return;
 }
+
+// void I3G4PropModule::InsertToTree(boost::shared_ptr<I3MCTree> &tree, const std::map<G4int, std::vector<G4int>> *trackToSecondariesMap, const boost::bimap<I3ParticleID, G4int> *particleToTrackMap, const std::map<I3ParticleID, I3Particle> *particleIDtoParticleMap, const I3ParticleID &id)
+// {
+//     log_info("Insert To Tree");
+//     G4int trackID = particleToTrackMap->left.at(id);
+//     std::vector<G4int> secondaryTrackIDs = trackToSecondariesMap->at(trackID);
+//     log_info("%i %lu", trackID, secondaryTrackIDs.size());
+//     std::vector<I3Particle> secondaryParticles;
+//     BOOST_FOREACH (auto &secondaryTrackID, secondaryTrackIDs)
+//     {
+//         log_info("%i", secondaryTrackID);
+//         secondaryParticles.insert(secondaryParticles.end(), particleIDtoParticleMap->at(particleToTrackMap->right.at(secondaryTrackID)));
+//     }
+
+//     tree->append_children(id, secondaryParticles);
+
+//     BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
+//     {
+//         InsertToTree(tree, trackToSecondariesMap, particleToTrackMap, particleIDtoParticleMap, secondaryParticle.GetID());
+//     }
+// }
 
 bool I3G4PropModule::ShouldDoProcess(I3FramePtr frame)
 {

@@ -1,7 +1,7 @@
 #ifndef G4PROP_HH
 #define G4PROP_HH
 
-#include "G4PropParticleTree.hh"
+// #include "G4PropParticleTree.hh"
 // Geant4 Includes
 #include "QGSP_BERT.hh"
 #include "G4EmStandardPhysics_option4.hh"
@@ -15,9 +15,11 @@
 #include "g4prop/PropRunAction.hh"
 #include "g4prop/PropDetectorConstruction.hh"
 #include "g4prop/PropPrimaryGeneratorAction.hh"
+#include "g4prop/PropEventAction.hh"
 #include "G4ParticleGun.hh"
 #include "G4UImanager.hh"
 #include "G4VisExecutive.hh"
+#include <boost/foreach.hpp>
 
 using namespace std;
 
@@ -28,8 +30,13 @@ namespace G4Prop
 	G4VisManager *visManager = nullptr;
 	G4double relativeCutoff = 0;
 
-	void RunGeant4(G4ParticleGun *particleGun, std::vector<std::string> commandList)
+	/// @note @ref ConfigureGeant4() needs to be called before initializing or running Geant4.
+	/// @param particleGun The G4ParticleGun to have shot.
+	/// @param commandList The UI commands to pass to Geant4.
+	/// @param storeTrajectory A G4int specifying how trajectories should be stored.
+	void RunGeant4(G4ParticleGun *particleGun, std::vector<std::string> commandList, G4int storeTrajectory)
 	{
+		G4cout << "In!" << G4endl;
 		// // For now ignore all args
 
 		// G4VModularPhysicsList *p = new FTFP_BERT(0);
@@ -57,8 +64,10 @@ namespace G4Prop
 		runManager->SetUserAction(new PropPrimaryGeneratorAction(particleGun));
 		runManager->SetUserAction(new PropSteppingAction(particleGun->GetParticleEnergy() * relativeCutoff));
 		runManager->SetUserAction(new PropStackingAction());
-		runManager->SetUserAction(new PropTrackingAction(particleGun->GetParticleEnergy() * relativeCutoff));
+		runManager->SetUserAction(new PropTrackingAction(particleGun->GetParticleEnergy() * relativeCutoff, storeTrajectory));
 		runManager->SetUserAction(new PropRunAction());
+		runManager->SetUserAction(new PropEventAction());
+		runManager->SetNumberOfEventsToBeStored(1);
 
 		BOOST_FOREACH (std::string &command, commandList)
 		{
@@ -76,6 +85,8 @@ namespace G4Prop
 		uiManager->ApplyCommand("/run/beamOn");
 	}
 
+	/// @brief
+	/// @param cutoff
 	void ConfigureGeant4(G4double cutoff)
 	{
 		relativeCutoff = cutoff;
@@ -95,14 +106,19 @@ namespace G4Prop
 		G4VModularPhysicsList *p = new QGSP_BERT();
 		p->ReplacePhysics(new G4EmStandardPhysics_option4());
 
-		auto *o = new G4OpticalPhysics();
-		p->RegisterPhysics(o);
+		G4cout << "Making Optical Physics" << G4endl;
 
+		// auto *o = new G4OpticalPhysics();
+		G4cout << "Registering Optical Physics" << G4endl;
+		// p->RegisterPhysics(o);
+		G4cout << "Setting Random Engine" << G4endl;
 		// Unsure if this should be some other engine/seed combo
 		G4Random::setTheEngine(new CLHEP::RanecuEngine);
 		G4Random::setTheSeed(12904);
 
+		G4cout << "Making New G4RunManager" << G4endl;
 		runManager = new G4RunManager;
+		G4cout << "Setting User Initialization" << G4endl;
 		runManager->SetUserInitialization(new PropDetectorConstruction());
 		runManager->SetUserInitialization(p);
 		runManager->Initialize();
@@ -121,6 +137,11 @@ namespace G4Prop
 	std::map<G4int, boost::shared_ptr<std::vector<G4int>>> &GetTrackToSecondariesMap()
 	{
 		return ((PropTrackingAction *)(runManager->GetUserTrackingAction()))->GetTrackToSecondariesMap();
+	}
+
+	std::vector<boost::shared_ptr<G4VTrajectory>> &GetTrajectories()
+	{
+		return ((PropEventAction *)(runManager->GetUserEventAction()))->GetTrajectories();
 	}
 
 	// G4RunManager *GetG4RunManager() { return runManager; }

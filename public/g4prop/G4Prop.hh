@@ -28,6 +28,7 @@ namespace G4Prop
 	G4RunManager *runManager = nullptr;
 	G4UImanager *uiManager = nullptr;
 	G4VisManager *visManager = nullptr;
+	CLHEP::HepRandomEngine *randomEngine = nullptr;
 	G4double relativeCutoff = 0;
 
 	/// @note @ref ConfigureGeant4() needs to be called before initializing or running Geant4.
@@ -91,17 +92,13 @@ namespace G4Prop
 	{
 		relativeCutoff = cutoff;
 
-		if (runManager != nullptr)
-		{
-			G4cout << "Deleting runManager" << G4endl;
-			runManager->~G4RunManager();
-		}
+		G4cout << "Deleting runManager" << G4endl;
+		delete runManager;
 
-		if (visManager != nullptr)
-		{
-			G4cout << "Deleting visManager" << G4endl;
-			visManager->~G4VisManager();
-		}
+		G4cout << "Deleting visManager" << G4endl;
+		delete visManager;
+
+		delete randomEngine;
 
 		G4VModularPhysicsList *p = new QGSP_BERT();
 		p->ReplacePhysics(new G4EmStandardPhysics_option4());
@@ -113,7 +110,9 @@ namespace G4Prop
 		// p->RegisterPhysics(o);
 		G4cout << "Setting Random Engine" << G4endl;
 		// Unsure if this should be some other engine/seed combo
-		G4Random::setTheEngine(new CLHEP::RanecuEngine);
+
+		randomEngine = new CLHEP::RanecuEngine;
+		G4Random::setTheEngine(randomEngine);
 		G4Random::setTheSeed(12904);
 
 		G4cout << "Making New G4RunManager" << G4endl;
@@ -139,7 +138,7 @@ namespace G4Prop
 		return ((PropTrackingAction *)(runManager->GetUserTrackingAction()))->GetTrackToSecondariesMap();
 	}
 
-	std::vector<boost::shared_ptr<G4VTrajectory>> &GetTrajectories()
+	std::vector<boost::shared_ptr<G4RichTrajectory>> &GetTrajectories()
 	{
 		return ((PropEventAction *)(runManager->GetUserEventAction()))->GetTrajectories();
 	}

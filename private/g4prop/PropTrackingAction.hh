@@ -23,8 +23,8 @@ namespace G4Prop
 	public:
 		void PreUserTrackingAction(const G4Track *track) override
 		{
-			// fpTrackingManager->SetStoreTrajectory(fStoreTrajectory);
-			fpTrackingManager->SetTrajectory(new PropTrajectory());
+			fpTrackingManager->SetStoreTrajectory(1);
+			fpTrackingManager->SetTrajectory(new PropTrajectory(track));
 		}
 		void PostUserTrackingAction(const G4Track *track) override
 		{

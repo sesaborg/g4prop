@@ -1,4 +1,11 @@
-#include "g4prop/PropTrajectory.cxx"
+#include "g4prop/PropTrajectory.hh"
+#include "G4AttDef.hh"
+#include "G4AttDefStore.hh"
+#include "G4AttValue.hh"
+#include "G4ParticleTable.hh"
+#include "G4TrajectoryPoint.hh"
+#include "G4UIcommand.hh"
+#include "G4UnitsTable.hh"
 
 G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator()
 {
@@ -13,22 +20,37 @@ PropTrajectory::PropTrajectory(const G4Track *aTrack)
 
     // // Insert the first rich trajectory point (see note above)...
     // //
-    // fpRichPointsContainer = new RichTrajectoryPointsContainer;
-    // fpRichPointsContainer->push_back(new G4RichTrajectoryPoint(aTrack));
+    fpPointsContainer = new std::vector<G4VTrajectoryPoint *>;
+    fpPointsContainer->push_back(new G4TrajectoryPoint(aTrack->GetPosition()));
 }
 
 PropTrajectory::PropTrajectory(PropTrajectory &right) : G4Trajectory(right)
 {
-
     fFinalKineticEnergy = right.fFinalKineticEnergy;
+    fpPointsContainer = new std::vector<G4VTrajectoryPoint *>;
+    for (auto &i : *right.fpPointsContainer)
+    {
+        auto rightPoint = (G4TrajectoryPoint *)i;
+        fpPointsContainer->push_back(new G4TrajectoryPoint(*rightPoint));
+    }
 }
 
 PropTrajectory::~PropTrajectory()
 {
+    if (fpPointsContainer != nullptr)
+    {
+        for (auto &i : *fpPointsContainer)
+        {
+            delete i;
+        }
+        fpPointsContainer->clear();
+        delete fpPointsContainer;
+    }
 }
 
 void PropTrajectory::AppendStep(const G4Step *aStep)
 {
+    fpPointsContainer->push_back(new G4TrajectoryPoint(aStep->GetPostStepPoint()->GetPosition()));
     const G4Track *track = aStep->GetTrack();
     const G4StepPoint *postStepPoint = aStep->GetPostStepPoint();
     if (track->GetCurrentStepNumber() > 0)
@@ -44,6 +66,14 @@ void PropTrajectory::MergeTrajectory(G4VTrajectory *secondTrajectory)
 
     auto seco = (PropTrajectory *)secondTrajectory;
     G4int ent = seco->GetPointEntries();
+    for (G4int i = 1; i < ent; ++i)
+    {
+        // initial point of the second trajectory should not be merged
+        //
+        fpPointsContainer->push_back((*(seco->fpPointsContainer))[i]);
+    }
+    delete (*seco->fpPointsContainer)[0];
+    seco->fpPointsContainer->clear();
 }
 
 void PropTrajectory::ShowTrajectory(std::ostream &os) const
@@ -94,10 +124,6 @@ std::vector<G4AttValue> *PropTrajectory::CreateAttValues() const
     std::vector<G4AttValue> *values = G4Trajectory::CreateAttValues();
 
     values->push_back(G4AttValue("FKE", G4BestUnit(fFinalKineticEnergy, "Energy"), ""));
-
-#ifdef G4ATTDEBUG
-    G4cout << G4AttCheck(values, GetAttDefs());
-#endif
 
     return values;
 }

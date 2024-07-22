@@ -138,7 +138,7 @@ namespace G4Prop
 		return ((PropTrackingAction *)(runManager->GetUserTrackingAction()))->GetTrackToSecondariesMap();
 	}
 
-	std::vector<boost::shared_ptr<G4RichTrajectory>> &GetTrajectories()
+	std::vector<boost::shared_ptr<PropTrajectory>> &GetTrajectories()
 	{
 		return ((PropEventAction *)(runManager->GetUserEventAction()))->GetTrajectories();
 	}

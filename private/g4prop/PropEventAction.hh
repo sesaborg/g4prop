@@ -24,15 +24,15 @@ namespace G4Prop
             auto vect = anEvent->GetTrajectoryContainer()->GetVector();
             for (G4VTrajectory *&j : *vect)
             {
-                G4RichTrajectory &test = *(G4RichTrajectory *)j;
-                fTrajectoryVector.push_back(boost::shared_ptr<G4RichTrajectory>(new G4RichTrajectory(test)));
+                PropTrajectory &test = *(PropTrajectory *)j;
+                fTrajectoryVector.push_back(boost::shared_ptr<PropTrajectory>(new PropTrajectory(test)));
             }
         }
 
-        std::vector<boost::shared_ptr<G4RichTrajectory>> &GetTrajectories() { return fTrajectoryVector; }
+        std::vector<boost::shared_ptr<PropTrajectory>> &GetTrajectories() { return fTrajectoryVector; }
 
         // private:
-        std::vector<boost::shared_ptr<G4RichTrajectory>> fTrajectoryVector = std::vector<boost::shared_ptr<G4RichTrajectory>>();
+        std::vector<boost::shared_ptr<PropTrajectory>> fTrajectoryVector = std::vector<boost::shared_ptr<PropTrajectory>>();
     };
 }
 

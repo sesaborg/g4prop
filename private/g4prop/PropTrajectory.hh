@@ -1,6 +1,8 @@
 #ifndef PROPTRAJECTORY_HH
 #define PROPTRAJECTORY_HH
+#include "G4TouchableHandle.hh"
 #include "G4Trajectory.hh"
+#include "trkgdefs.hh"
 
 class PropTrajectory : public G4Trajectory
 {
@@ -33,20 +35,20 @@ public:
     std::vector<G4AttValue> *CreateAttValues() const override;
 
 private:
+    std::vector<G4VTrajectoryPoint *> *fpPointsContainer = nullptr;
     G4double fFinalKineticEnergy = 0.0;
-    G4ThreeVector fFinalMomentumDirection(0, 0, 0);
-}
+    // G4ThreeVector fFinalMomentumDirection(0, 0, 0);
+};
 
-extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&
-aPropTrajectoryAllocator();
+extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();
 
-inline void *G4RichTrajectory::operator new(size_t)
+inline void *PropTrajectory::operator new(size_t)
 {
     if (aPropTrajectoryAllocator() == nullptr)
     {
         aPropTrajectoryAllocator() = new G4Allocator<PropTrajectory>;
     }
-    return (void *)aPropTrajectoryAllocator()->MallocSingle();
+    return (void *)(new G4Allocator<PropTrajectory>)->MallocSingle();
 }
 
 inline void PropTrajectory::operator delete(void *aPropTrajectory)
@@ -56,11 +58,11 @@ inline void PropTrajectory::operator delete(void *aPropTrajectory)
 
 inline G4int PropTrajectory::GetPointEntries() const
 {
-    return G4int(fpRichPointsContainer->size());
+    return G4int(fpPointsContainer->size());
 }
 
 inline G4VTrajectoryPoint *PropTrajectory::GetPoint(G4int i) const
 {
-    return (*fpRichPointsContainer)[i];
+    return (*fpPointsContainer)[i];
 }
 #endif // PROPTRAJECTORY_HH

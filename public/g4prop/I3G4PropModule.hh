@@ -1,7 +1,6 @@
 #ifndef I3G4PROPMODULE_HH
 #define I3G4PROPMODULE_HH
 
-#include "G4ParticleDefinition.hh"
 #include "icetray/I3ConditionalModule.h"
 #include "icetray/I3Module.h"
 #include "g4prop/G4Prop.hh"
@@ -40,8 +39,6 @@ public:
     virtual void Process();
 
     virtual void Finish();
-
-    void RunGeant4(G4ParticleDefinition[]);
 
     // Will want an overload that lets users provide a custom physics list.
     void ConfigureGeant4();

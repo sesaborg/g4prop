@@ -69,11 +69,6 @@ void I3G4PropModule::Process()
     return;
 }
 
-void I3G4PropModule::RunGeant4(G4ParticleDefinition particleList[])
-{
-    log_info("Trying to run Geant4");
-}
-
 void I3G4PropModule::DAQ(I3FramePtr frame)
 {
     log_info("g4prop DAQ");

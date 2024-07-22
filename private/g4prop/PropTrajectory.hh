@@ -2,6 +2,7 @@
 #define PROPTRAJECTORY_HH
 #include "G4TouchableHandle.hh"
 #include "G4Trajectory.hh"
+#include "G4ThreeVector.hh"
 #include "trkgdefs.hh"
 
 class PropTrajectory : public G4Trajectory
@@ -29,6 +30,12 @@ public:
     inline G4int GetPointEntries() const override;
     inline G4VTrajectoryPoint *GetPoint(G4int i) const override;
 
+    inline G4double GetFinalKineticEnergy() const { return fFinalKineticEnergy; }
+    inline G4ThreeVector GetFinalMomentumDirection() const { return fFinalMomentumDirection; }
+    inline G4ThreeVector GetFinalPosition() const { return (*fpPointsContainer->end())->GetPosition(); }
+    inline G4double GetFinalGlobalTime() const { return fFinalGlobalTime; }
+    inline G4TrajectoryPoint *GetFinalPoint() const { return (G4TrajectoryPoint *)(*fpPointsContainer->end()); }
+
     // Get methods for HepRep style attributes
     //
     const std::map<G4String, G4AttDef> *GetAttDefs() const override;
@@ -37,7 +44,10 @@ public:
 private:
     std::vector<G4VTrajectoryPoint *> *fpPointsContainer = nullptr;
     G4double fFinalKineticEnergy = 0.0;
-    // G4ThreeVector fFinalMomentumDirection(0, 0, 0);
+    G4ThreeVector fFinalMomentumDirection = G4ThreeVector(0, 0, 0);
+    G4double fFinalGlobalTime = 0.0;
+    G4int fTrackID = 0;
+    G4int fParentID = 0;
 };
 
 extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();

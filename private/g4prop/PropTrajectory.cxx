@@ -55,7 +55,9 @@ void PropTrajectory::AppendStep(const G4Step *aStep)
     const G4StepPoint *postStepPoint = aStep->GetPostStepPoint();
     if (track->GetCurrentStepNumber() > 0)
     {
-        fFinalKineticEnergy = aStep->GetPreStepPoint()->GetKineticEnergy() - aStep->GetTotalEnergyDeposit();
+        fFinalKineticEnergy = postStepPoint->GetKineticEnergy(); // aStep->GetPreStepPoint()->GetKineticEnergy() - aStep->GetTotalEnergyDeposit();
+        fFinalMomentumDirection = postStepPoint->GetMomentumDirection();
+        fFinalGlobalTime = postStepPoint->GetGlobalTime();
     }
 }
 

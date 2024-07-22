@@ -10,7 +10,10 @@ namespace G4Prop
     {
     public:
         PropEventAction() : G4UserEventAction() {};
-        ~PropEventAction() override {};
+        ~PropEventAction() override
+        {
+            G4cout << "PropEventAction has been deleted." << G4endl;
+        };
 
         void EndOfEventAction(const G4Event *anEvent) override
         {

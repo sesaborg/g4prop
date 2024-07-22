@@ -40,7 +40,9 @@ private:
     // G4ThreeVector fFinalMomentumDirection(0, 0, 0);
 };
 
-extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();
+// extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();
+
+G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();
 
 inline void *PropTrajectory::operator new(size_t)
 {

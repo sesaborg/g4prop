@@ -22,6 +22,11 @@ public:
                      "Commands to pass to the Geant4 UI manager.",
                      uiCommands_);
 
+        relativeCutoff_ = 0.001;
+        AddParameter("RelativeCutoff",
+                     "The ratio between the particle cutoff energy and the initial particle energy.",
+                     relativeCutoff_);
+
         reserveLength_ = 10000;
         AddParameter("ReserveLength",
                      "Number of Tracks/Particles to allocate space for at a time in their respective vectors.",
@@ -52,6 +57,7 @@ private:
     bool configured = false;
     std::vector<std::string> uiCommands_;
     size_t reserveLength_;
+    double relativeCutoff_;
     // void InsertToTree(boost::shared_ptr<I3MCTree> &, const std::map<G4int, std::vector<G4int>> *, const boost::bimap<I3ParticleID, G4int> *, const std::map<I3ParticleID, I3Particle> *, const I3ParticleID &);
 };
 

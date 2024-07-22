@@ -5,6 +5,7 @@
 #include "globals.hh"
 #include "G4Types.hh"
 #include "boost/shared_ptr.hpp"
+#include "g4prop/PropTrajectory.hh"
 
 namespace G4Prop
 {
@@ -22,7 +23,8 @@ namespace G4Prop
 	public:
 		void PreUserTrackingAction(const G4Track *track) override
 		{
-			fpTrackingManager->SetStoreTrajectory(fStoreTrajectory);
+			// fpTrackingManager->SetStoreTrajectory(fStoreTrajectory);
+			fpTrackingManager->SetTrajectory(new PropTrajectory());
 		}
 		void PostUserTrackingAction(const G4Track *track) override
 		{

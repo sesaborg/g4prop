@@ -7,6 +7,7 @@
 #include <boost/foreach.hpp>
 #include "G4SystemOfUnits.hh"
 #include "G4OpticalParameters.hh"
+#include "g4prop/PropEventAction.hh"
 
 typedef I3G4PropModule g4prop;
 namespace
@@ -22,10 +23,12 @@ I3G4PropModule::~I3G4PropModule()
 void I3G4PropModule::Configure()
 {
     GetParameter("Geant4Commands", uiCommands_);
+    GetParameter("RelativeCutoff", relativeCutoff_);
     log_info("Configuring g4prop.");
     if (!configured)
     {
-        ConfigureGeant4();
+        log_info("Configuring Geant4");
+        G4Prop::ConfigureGeant4(relativeCutoff_);
         configured = true;
         log_info("g4prop's Geant4 has been configured.");
     }
@@ -66,12 +69,6 @@ void I3G4PropModule::Process()
     return;
 }
 
-void I3G4PropModule::ConfigureGeant4()
-{
-    log_info("Configuring Geant4");
-    G4Prop::ConfigureGeant4(0.01);
-}
-
 void I3G4PropModule::RunGeant4(G4ParticleDefinition particleList[])
 {
     log_info("Trying to run Geant4");
@@ -110,32 +107,33 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
 
         if (configured)
         {
-            if (false)
+
+            log_info("Using G4Track Methods");
+            G4ParticleDefinition *geant4Particle = G4ParticleTable::GetParticleTable()->FindParticle(originalParticle.GetPdgEncoding());
+            if (geant4Particle != 0)
             {
-                G4ParticleDefinition *geant4Particle = G4ParticleTable::GetParticleTable()->FindParticle(originalParticle.GetPdgEncoding());
-                if (geant4Particle != 0)
+                log_info(" -- In Geant4: %s", geant4Particle->GetParticleName().c_str());
+                G4Prop::G4PropParticleProperties particleToShoot = (G4Prop::G4PropParticleProperties){
+                    originalParticle.GetMinorID(),
+                    originalParticle.GetPdgEncoding(),
+                    originalParticle.GetEnergy() / I3Units::GeV * CLHEP::GeV,
+                    G4ThreeVector(originalParticle.GetPos().GetX() / I3Units::mm * CLHEP::mm,
+                                  originalParticle.GetPos().GetY() / I3Units::mm * CLHEP::mm,
+                                  originalParticle.GetPos().GetZ() / I3Units::mm * CLHEP::mm),
+                    G4ThreeVector(cos(originalParticle.GetAzimuth() / I3Units::rad) * cos(originalParticle.GetZenith() / I3Units::rad),
+                                  sin(originalParticle.GetAzimuth() / I3Units::rad) * cos(originalParticle.GetZenith() / I3Units::rad),
+                                  sin(originalParticle.GetZenith() / I3Units::rad)),
+                    originalParticle.GetAzimuth() / I3Units::deg * CLHEP::deg,
+                    originalParticle.GetZenith(),
+                    originalParticle.GetTime()};
+
+                G4ParticleGun *particleGun;
+                G4Prop::LoadParticleGun(particleToShoot, particleGun);
+
+                log_info("\nG4Particle Configuration Check:\n\tParticle Definition Name: %s\n\tParticle Energy: %f GeV\n\tParticle Position: (%f m, %f m, %f m)\n", particleGun->GetParticleDefinition()->GetParticleName().c_str(), particleGun->GetParticleEnergy() / CLHEP::GeV, particleGun->GetParticlePosition().getX() / CLHEP::m, particleGun->GetParticlePosition().getY() / CLHEP::m, particleGun->GetParticlePosition().getZ() / CLHEP::m);
+                G4Prop::RunGeant4(particleGun, uiCommands_, 3);
+                if (false)
                 {
-                    log_info(" -- In Geant4: %s", geant4Particle->GetParticleName().c_str());
-                    G4Prop::G4PropParticleProperties particleToShoot = (G4Prop::G4PropParticleProperties){
-                        originalParticle.GetMinorID(),
-                        originalParticle.GetPdgEncoding(),
-                        originalParticle.GetEnergy() / I3Units::GeV * CLHEP::GeV,
-                        G4ThreeVector(originalParticle.GetPos().GetX() / I3Units::mm * CLHEP::mm,
-                                      originalParticle.GetPos().GetY() / I3Units::mm * CLHEP::mm,
-                                      originalParticle.GetPos().GetZ() / I3Units::mm * CLHEP::mm),
-                        G4ThreeVector(cos(originalParticle.GetAzimuth() / I3Units::rad) * cos(originalParticle.GetZenith() / I3Units::rad),
-                                      sin(originalParticle.GetAzimuth() / I3Units::rad) * cos(originalParticle.GetZenith() / I3Units::rad),
-                                      sin(originalParticle.GetZenith() / I3Units::rad)),
-                        originalParticle.GetAzimuth() / I3Units::deg * CLHEP::deg,
-                        originalParticle.GetZenith(),
-                        originalParticle.GetTime()};
-
-                    G4ParticleGun *particleGun;
-                    G4Prop::LoadParticleGun(particleToShoot, particleGun);
-
-                    log_info("\nG4Particle Configuration Check:\n\tParticle Definition Name: %s\n\tParticle Energy: %f GeV\n\tParticle Position: (%f m, %f m, %f m)\n", particleGun->GetParticleDefinition()->GetParticleName().c_str(), particleGun->GetParticleEnergy() / CLHEP::GeV, particleGun->GetParticlePosition().getX() / CLHEP::m, particleGun->GetParticlePosition().getY() / CLHEP::m, particleGun->GetParticlePosition().getZ() / CLHEP::m);
-                    G4Prop::RunGeant4(particleGun, uiCommands_, 3);
-
                     std::vector<G4Track *> tracks = G4Prop::GetTracks();
                     // std::vector<I3Particle> particles;
                     std::map<I3ParticleID, I3Particle> particleMap;
@@ -258,57 +256,130 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
             }
             else
             {
-                auto &trajectories = G4Prop::GetTrajectories();
+                log_info("Using G4RichTrajectory Methods");
+                // auto &trajectories = G4Prop::GetTrajectories();
+                auto &trajectories = ((G4Prop::PropEventAction *)(G4Prop::runManager->GetUserEventAction()))->fTrajectoryVector;
+                G4cout << trajectories.size() << G4endl;
+                log_info("Got Trajectories");
                 auto trajectorySecondaryMap = std::map<G4int, boost::shared_ptr<std::vector<G4int>>>();
+
+                log_info("For Each Trajectory:");
+                // for (size_t i = 0; i < trajectories.size(); i++)
+                // {
+                //     // log_info("In the loop:");
+                //     // log_info("%i", trajectories.at(i)->GetTrackID());
+                //     auto secondariesList = new std::vector<G4int>();
+                //     trajectorySecondaryMap.insert({trajectories.at(i)->GetTrackID(), boost::shared_ptr<std::vector<G4int>>(secondariesList)});
+
+                //     if (trajectories.at(i)->GetParentID() != 0)
+                //     {
+                //         trajectorySecondaryMap.at(trajectories.at(i)->GetParentID())->push_back(trajectories.at(i)->GetTrackID());
+                //     }
+                // }
+
+                std::map<I3ParticleID, I3Particle> particleMap;
+                boost::bimap<I3ParticleID, G4int> particleToTrackMap;
 
                 for (auto &trajectory : trajectories)
                 {
+                    log_info("%i", trajectory->GetTrackID());
                     auto secondariesList = new std::vector<G4int>();
                     trajectorySecondaryMap.insert({trajectory->GetTrackID(), boost::shared_ptr<std::vector<G4int>>(secondariesList)});
 
-                    if (trajectory->GetTrackID() != 1)
+                    if (trajectory->GetParentID() != 0)
                     {
                         trajectorySecondaryMap.at(trajectory->GetParentID())->push_back(trajectory->GetTrackID());
                     }
+
+                    if (trajectory->GetTrackID() == 1)
+                    {
+                        // Special case where the primary particle in Geant4 is the same as the original particle.
+                        particleToTrackMap.insert({originalParticle.GetID(), trajectory->GetTrackID()});
+                        particleMap.insert({originalParticle.GetID(), originalParticle});
+                        // log_info("Inserted originalParticleID = %i, trackID = %i", originalParticle.GetID().minorID, track->GetTrackID());
+                        continue;
+                    }
+                    else
+                    {
+                        // Otherwise, construct a new I3Particle to be appended to the I3MCTree.
+
+                        G4ThreeVector g4pos = trajectory->GetPoint(trajectory->GetPointEntries() - 1)->GetPosition();
+                        I3Position i3pos = I3Position(g4pos.getX() / CLHEP::m * I3Units::m, g4pos.getY() / CLHEP::m * I3Units::m, g4pos.getZ() / CLHEP::m * I3Units::m);
+                        G4ThreeVector g4dir = trajectory->Get();
+                        I3Direction i3dir = I3Direction(g4dir.getX(), g4dir.getY(), g4dir.getZ());
+                        I3Particle particle(i3pos, i3dir, track->GetGlobalTime() / CLHEP::ns * I3Units::ns);
+                        particle.SetEnergy(track->GetKineticEnergy() / CLHEP::GeV * I3Units::GeV);
+                        particle.SetPdgEncoding(track->GetParticleDefinition()->GetPDGEncoding());
+                        particleToTrackMap.insert({particle.GetID(), track->GetTrackID()});
+                        particleMap.insert({particle.GetID(), particle});
+                    }
+
+                    std::function<void(const I3ParticleID &)> insertToTree = [newI3MCTree, particleToTrackMap, particleMap, trajectorySecondaryMap, &insertToTree](const I3ParticleID &id)
+                    {
+                        G4int trackID = particleToTrackMap.left.at(id);
+                        boost::shared_ptr<std::vector<G4int>> secondaryTrackIDs = trajectorySecondaryMap.at(trackID);
+                        // log_info("Insert To Tree %i %lu", trackID, secondaryTrackIDs->size());
+                        // log_info("%i %lu", trackID, secondaryTrackIDs->size());
+                        std::vector<I3Particle> secondaryParticles;
+                        // BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
+                        // {
+                        //     log_info("%i", secondaryTrackID);
+                        //     // secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
+                        // }
+
+                        BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
+                        {
+                            // log_info("%i", secondaryTrackID);
+                            secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
+                        }
+
+                        newI3MCTree->append_children(id, secondaryParticles);
+
+                        BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
+                        {
+                            insertToTree(secondaryParticle.GetID());
+                        }
+                    };
+
+                    insertToTree(originalParticle.GetID());
                 }
+                // else
+                // {
+                //     log_warn(" -- In Geant4: Unsupported PDG!");
+                // }
             }
-            // else
-            // {
-            //     log_warn(" -- In Geant4: Unsupported PDG!");
-            // }
+
+            iter++;
         }
 
-        iter++;
+        frame->Put("G4PropI3MCTree", newI3MCTree);
+        log_info("Pushing DAQ Frame.");
+        PushFrame(frame);
+        return;
     }
 
-    frame->Put("G4PropI3MCTree", newI3MCTree);
-    log_info("Pushing DAQ Frame.");
-    PushFrame(frame);
-    return;
-}
+    // void I3G4PropModule::InsertToTree(boost::shared_ptr<I3MCTree> &tree, const std::map<G4int, std::vector<G4int>> *trackToSecondariesMap, const boost::bimap<I3ParticleID, G4int> *particleToTrackMap, const std::map<I3ParticleID, I3Particle> *particleIDtoParticleMap, const I3ParticleID &id)
+    // {
+    //     log_info("Insert To Tree");
+    //     G4int trackID = particleToTrackMap->left.at(id);
+    //     std::vector<G4int> secondaryTrackIDs = trackToSecondariesMap->at(trackID);
+    //     log_info("%i %lu", trackID, secondaryTrackIDs.size());
+    //     std::vector<I3Particle> secondaryParticles;
+    //     BOOST_FOREACH (auto &secondaryTrackID, secondaryTrackIDs)
+    //     {
+    //         log_info("%i", secondaryTrackID);
+    //         secondaryParticles.insert(secondaryParticles.end(), particleIDtoParticleMap->at(particleToTrackMap->right.at(secondaryTrackID)));
+    //     }
 
-// void I3G4PropModule::InsertToTree(boost::shared_ptr<I3MCTree> &tree, const std::map<G4int, std::vector<G4int>> *trackToSecondariesMap, const boost::bimap<I3ParticleID, G4int> *particleToTrackMap, const std::map<I3ParticleID, I3Particle> *particleIDtoParticleMap, const I3ParticleID &id)
-// {
-//     log_info("Insert To Tree");
-//     G4int trackID = particleToTrackMap->left.at(id);
-//     std::vector<G4int> secondaryTrackIDs = trackToSecondariesMap->at(trackID);
-//     log_info("%i %lu", trackID, secondaryTrackIDs.size());
-//     std::vector<I3Particle> secondaryParticles;
-//     BOOST_FOREACH (auto &secondaryTrackID, secondaryTrackIDs)
-//     {
-//         log_info("%i", secondaryTrackID);
-//         secondaryParticles.insert(secondaryParticles.end(), particleIDtoParticleMap->at(particleToTrackMap->right.at(secondaryTrackID)));
-//     }
+    //     tree->append_children(id, secondaryParticles);
 
-//     tree->append_children(id, secondaryParticles);
+    //     BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
+    //     {
+    //         InsertToTree(tree, trackToSecondariesMap, particleToTrackMap, particleIDtoParticleMap, secondaryParticle.GetID());
+    //     }
+    // }
 
-//     BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
-//     {
-//         InsertToTree(tree, trackToSecondariesMap, particleToTrackMap, particleIDtoParticleMap, secondaryParticle.GetID());
-//     }
-// }
-
-bool I3G4PropModule::ShouldDoProcess(I3FramePtr frame)
-{
-    return true;
-}
+    bool I3G4PropModule::ShouldDoProcess(I3FramePtr frame)
+    {
+        return true;
+    }

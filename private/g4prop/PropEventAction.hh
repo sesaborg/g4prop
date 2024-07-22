@@ -13,12 +13,14 @@ namespace G4Prop
         ~PropEventAction() override
         {
             G4cout << "PropEventAction has been deleted." << G4endl;
+            exit(-25);
         };
 
         void EndOfEventAction(const G4Event *anEvent) override
         {
             // fpEventManager->KeepTheCurrentEvent();
 
+            G4cout << "Building fTrajectoryVector" << G4endl;
             auto vect = anEvent->GetTrajectoryContainer()->GetVector();
             for (G4VTrajectory *&j : *vect)
             {
@@ -29,7 +31,7 @@ namespace G4Prop
 
         std::vector<boost::shared_ptr<G4RichTrajectory>> &GetTrajectories() { return fTrajectoryVector; }
 
-    private:
+        // private:
         std::vector<boost::shared_ptr<G4RichTrajectory>> fTrajectoryVector = std::vector<boost::shared_ptr<G4RichTrajectory>>();
     };
 }

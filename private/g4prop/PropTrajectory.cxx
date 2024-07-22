@@ -16,10 +16,8 @@ G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator()
 PropTrajectory::PropTrajectory(const G4Track *aTrack)
     : G4Trajectory(aTrack)
 {
-    fFinalKineticEnergy = aTrack->GetKineticEnergy();
+    fFinalKineticEnergy = aTrack->GetKineticEnergy(); // Ok maybe this is supposed to be fInitialKineticEnergy...
 
-    // // Insert the first rich trajectory point (see note above)...
-    // //
     fpPointsContainer = new std::vector<G4VTrajectoryPoint *>;
     fpPointsContainer->push_back(new G4TrajectoryPoint(aTrack->GetPosition()));
 }

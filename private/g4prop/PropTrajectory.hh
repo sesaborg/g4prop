@@ -32,9 +32,9 @@ public:
 
     inline G4double GetFinalKineticEnergy() const { return fFinalKineticEnergy; }
     inline G4ThreeVector GetFinalMomentumDirection() const { return fFinalMomentumDirection; }
-    inline G4ThreeVector GetFinalPosition() const { return (*fpPointsContainer->end())->GetPosition(); }
+    inline G4ThreeVector GetFinalPosition() const { return fpPointsContainer->back()->GetPosition(); }
     inline G4double GetFinalGlobalTime() const { return fFinalGlobalTime; }
-    inline G4TrajectoryPoint *GetFinalPoint() const { return (G4TrajectoryPoint *)(*fpPointsContainer->end()); }
+    inline G4TrajectoryPoint *GetFinalPoint() const { return (G4TrajectoryPoint *)(fpPointsContainer->back()); }
 
     // Get methods for HepRep style attributes
     //

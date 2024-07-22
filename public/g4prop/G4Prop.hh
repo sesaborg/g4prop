@@ -105,9 +105,9 @@ namespace G4Prop
 
 		G4cout << "Making Optical Physics" << G4endl;
 
-		// auto *o = new G4OpticalPhysics();
+		auto *o = new G4OpticalPhysics();
 		G4cout << "Registering Optical Physics" << G4endl;
-		// p->RegisterPhysics(o);
+		p->RegisterPhysics(o);
 		G4cout << "Setting Random Engine" << G4endl;
 		// Unsure if this should be some other engine/seed combo
 

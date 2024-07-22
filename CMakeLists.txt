@@ -3,6 +3,9 @@ i3_project(g4prop
         DOCS_DIR resources/docs
 )
 
+include(FindGeant4.cmake)
+include(FindCLHEP.cmake)
+
 SET(LIB_${PROJECT_NAME}_SOURCEFILES
 
         # Geant4 Files
@@ -10,7 +13,7 @@ SET(LIB_${PROJECT_NAME}_SOURCEFILES
         private/g4prop/PropRunAction.cxx
         private/g4prop/PropStackingAction.cxx
         private/g4prop/PropSteppingAction.cxx
-        # private/g4prop/PropTrackingAction.cxx
+        private/g4prop/PropTrajectory.cxx
 
         # Icetray-specific bindings
         private/I3G4PropParticleTree.cxx

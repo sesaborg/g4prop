@@ -108,7 +108,6 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
         if (configured)
         {
 
-            log_info("Using G4Track Methods");
             G4ParticleDefinition *geant4Particle = G4ParticleTable::GetParticleTable()->FindParticle(originalParticle.GetPdgEncoding());
             if (geant4Particle != 0)
             {
@@ -134,6 +133,7 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                 G4Prop::RunGeant4(particleGun, uiCommands_, 3);
                 if (false)
                 {
+                    log_info("Using G4Track Methods");
                     std::vector<G4Track *> tracks = G4Prop::GetTracks();
                     // std::vector<I3Particle> particles;
                     std::map<I3ParticleID, I3Particle> particleMap;
@@ -253,102 +253,103 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
 
                     insertToTree(originalParticle.GetID());
                 }
-            }
-            else
-            {
-                log_info("Using G4RichTrajectory Methods");
-                // auto &trajectories = G4Prop::GetTrajectories();
-                auto &trajectories = ((G4Prop::PropEventAction *)(G4Prop::runManager->GetUserEventAction()))->fTrajectoryVector;
-                G4cout << trajectories.size() << G4endl;
-                log_info("Got Trajectories");
-                auto trajectorySecondaryMap = std::map<G4int, boost::shared_ptr<std::vector<G4int>>>();
 
-                log_info("For Each Trajectory:");
-                // for (size_t i = 0; i < trajectories.size(); i++)
-                // {
-                //     // log_info("In the loop:");
-                //     // log_info("%i", trajectories.at(i)->GetTrackID());
-                //     auto secondariesList = new std::vector<G4int>();
-                //     trajectorySecondaryMap.insert({trajectories.at(i)->GetTrackID(), boost::shared_ptr<std::vector<G4int>>(secondariesList)});
-
-                //     if (trajectories.at(i)->GetParentID() != 0)
-                //     {
-                //         trajectorySecondaryMap.at(trajectories.at(i)->GetParentID())->push_back(trajectories.at(i)->GetTrackID());
-                //     }
-                // }
-
-                std::map<I3ParticleID, I3Particle> particleMap;
-                boost::bimap<I3ParticleID, G4int> particleToTrackMap;
-
-                for (auto &trajectory : trajectories)
+                else
                 {
-                    log_info("%i", trajectory->GetTrackID());
-                    auto secondariesList = new std::vector<G4int>();
-                    trajectorySecondaryMap.insert({trajectory->GetTrackID(), boost::shared_ptr<std::vector<G4int>>(secondariesList)});
+                    log_info("Using G4RichTrajectory Methods");
+                    // auto &trajectories = G4Prop::GetTrajectories();
+                    auto &trajectories = ((G4Prop::PropEventAction *)(G4Prop::runManager->GetUserEventAction()))->fTrajectoryVector;
+                    G4cout << trajectories.size() << G4endl;
+                    log_info("Got Trajectories");
+                    auto trajectorySecondaryMap = std::map<G4int, boost::shared_ptr<std::vector<G4int>>>();
 
-                    if (trajectory->GetParentID() != 0)
+                    // for (size_t i = 0; i < trajectories.size(); i++)
+                    // {
+                    //     // log_info("In the loop:");
+                    //     // log_info("%i", trajectories.at(i)->GetTrackID());
+                    //     auto secondariesList = new std::vector<G4int>();
+                    //     trajectorySecondaryMap.insert({trajectories.at(i)->GetTrackID(), boost::shared_ptr<std::vector<G4int>>(secondariesList)});
+
+                    //     if (trajectories.at(i)->GetParentID() != 0)
+                    //     {
+                    //         trajectorySecondaryMap.at(trajectories.at(i)->GetParentID())->push_back(trajectories.at(i)->GetTrackID());
+                    //     }
+                    // }
+
+                    std::map<I3ParticleID, I3Particle> particleMap;
+                    boost::bimap<I3ParticleID, G4int> particleToTrackMap;
+
+                    log_info("For Each Trajectory:");
+                    for (auto &trajectory : trajectories)
                     {
-                        trajectorySecondaryMap.at(trajectory->GetParentID())->push_back(trajectory->GetTrackID());
-                    }
 
-                    if (trajectory->GetTrackID() == 1)
-                    {
-                        // Special case where the primary particle in Geant4 is the same as the original particle.
-                        particleToTrackMap.insert({originalParticle.GetID(), trajectory->GetTrackID()});
-                        particleMap.insert({originalParticle.GetID(), originalParticle});
-                        // log_info("Inserted originalParticleID = %i, trackID = %i", originalParticle.GetID().minorID, track->GetTrackID());
-                        continue;
-                    }
-                    else
-                    {
-                        // Otherwise, construct a new I3Particle to be appended to the I3MCTree.
+                        log_info("%i", trajectory->GetTrackID());
+                        auto secondariesList = new std::vector<G4int>();
+                        trajectorySecondaryMap.insert({trajectory->GetTrackID(), boost::shared_ptr<std::vector<G4int>>(secondariesList)});
 
-                        G4ThreeVector g4pos = trajectory->GetPoint(trajectory->GetPointEntries() - 1)->GetPosition();
-                        I3Position i3pos = I3Position(g4pos.getX() / CLHEP::m * I3Units::m, g4pos.getY() / CLHEP::m * I3Units::m, g4pos.getZ() / CLHEP::m * I3Units::m);
-                        G4ThreeVector g4dir = trajectory->Get();
-                        I3Direction i3dir = I3Direction(g4dir.getX(), g4dir.getY(), g4dir.getZ());
-                        I3Particle particle(i3pos, i3dir, track->GetGlobalTime() / CLHEP::ns * I3Units::ns);
-                        particle.SetEnergy(track->GetKineticEnergy() / CLHEP::GeV * I3Units::GeV);
-                        particle.SetPdgEncoding(track->GetParticleDefinition()->GetPDGEncoding());
-                        particleToTrackMap.insert({particle.GetID(), track->GetTrackID()});
-                        particleMap.insert({particle.GetID(), particle});
-                    }
-
-                    std::function<void(const I3ParticleID &)> insertToTree = [newI3MCTree, particleToTrackMap, particleMap, trajectorySecondaryMap, &insertToTree](const I3ParticleID &id)
-                    {
-                        G4int trackID = particleToTrackMap.left.at(id);
-                        boost::shared_ptr<std::vector<G4int>> secondaryTrackIDs = trajectorySecondaryMap.at(trackID);
-                        // log_info("Insert To Tree %i %lu", trackID, secondaryTrackIDs->size());
-                        // log_info("%i %lu", trackID, secondaryTrackIDs->size());
-                        std::vector<I3Particle> secondaryParticles;
-                        // BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
-                        // {
-                        //     log_info("%i", secondaryTrackID);
-                        //     // secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
-                        // }
-
-                        BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
+                        if (trajectory->GetParentID() != 0)
                         {
-                            // log_info("%i", secondaryTrackID);
-                            secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
+                            trajectorySecondaryMap.at(trajectory->GetParentID())->push_back(trajectory->GetTrackID());
                         }
 
-                        newI3MCTree->append_children(id, secondaryParticles);
-
-                        BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
+                        if (trajectory->GetTrackID() == 1)
                         {
-                            insertToTree(secondaryParticle.GetID());
+                            // Special case where the primary particle in Geant4 is the same as the original particle.
+                            particleToTrackMap.insert({originalParticle.GetID(), trajectory->GetTrackID()});
+                            particleMap.insert({originalParticle.GetID(), originalParticle});
+                            // log_info("Inserted originalParticleID = %i, trackID = %i", originalParticle.GetID().minorID, track->GetTrackID());
+                            continue;
                         }
-                    };
+                        else
+                        {
+                            // Otherwise, construct a new I3Particle to be appended to the I3MCTree.
 
-                    insertToTree(originalParticle.GetID());
+                            G4ThreeVector g4pos = trajectory->GetFinalPosition();
+                            I3Position i3pos = I3Position(g4pos.getX() / CLHEP::m * I3Units::m, g4pos.getY() / CLHEP::m * I3Units::m, g4pos.getZ() / CLHEP::m * I3Units::m);
+                            G4ThreeVector g4dir = trajectory->GetFinalMomentumDirection();
+                            I3Direction i3dir = I3Direction(g4dir.getX(), g4dir.getY(), g4dir.getZ());
+                            I3Particle particle(i3pos, i3dir, trajectory->GetFinalGlobalTime() / CLHEP::ns * I3Units::ns);
+                            particle.SetEnergy(trajectory->GetFinalKineticEnergy() / CLHEP::GeV * I3Units::GeV);
+                            particle.SetPdgEncoding(trajectory->GetPDGEncoding());
+                            particleToTrackMap.insert({particle.GetID(), trajectory->GetTrackID()});
+                            particleMap.insert({particle.GetID(), particle});
+                        }
+
+                        std::function<void(const I3ParticleID &)> insertToTree = [newI3MCTree, particleToTrackMap, particleMap, trajectorySecondaryMap, &insertToTree](const I3ParticleID &id)
+                        {
+                            G4int trackID = particleToTrackMap.left.at(id);
+                            boost::shared_ptr<std::vector<G4int>> secondaryTrackIDs = trajectorySecondaryMap.at(trackID);
+                            // log_info("Insert To Tree %i %lu", trackID, secondaryTrackIDs->size());
+                            // log_info("%i %lu", trackID, secondaryTrackIDs->size());
+                            std::vector<I3Particle> secondaryParticles;
+                            // BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
+                            // {
+                            //     log_info("%i", secondaryTrackID);
+                            //     // secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
+                            // }
+
+                            BOOST_FOREACH (auto &secondaryTrackID, *secondaryTrackIDs)
+                            {
+                                // log_info("%i", secondaryTrackID);
+                                secondaryParticles.insert(secondaryParticles.end(), particleMap.at(particleToTrackMap.right.at(secondaryTrackID)));
+                            }
+
+                            newI3MCTree->append_children(id, secondaryParticles);
+
+                            BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
+                            {
+                                insertToTree(secondaryParticle.GetID());
+                            }
+                        };
+
+                        insertToTree(originalParticle.GetID());
+                    }
+                    // else
+                    // {
+                    //     log_warn(" -- In Geant4: Unsupported PDG!");
+                    // }
                 }
-                // else
-                // {
-                //     log_warn(" -- In Geant4: Unsupported PDG!");
-                // }
             }
-
             iter++;
         }
 
@@ -378,8 +379,8 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
     //         InsertToTree(tree, trackToSecondariesMap, particleToTrackMap, particleIDtoParticleMap, secondaryParticle.GetID());
     //     }
     // }
-
-    bool I3G4PropModule::ShouldDoProcess(I3FramePtr frame)
-    {
-        return true;
-    }
+}
+bool I3G4PropModule::ShouldDoProcess(I3FramePtr frame)
+{
+    return true;
+}

@@ -52,7 +52,7 @@ private:
 
 // extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();
 
-G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();
+extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();
 
 inline void *PropTrajectory::operator new(size_t)
 {

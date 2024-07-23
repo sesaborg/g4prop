@@ -3,8 +3,8 @@ i3_project(g4prop
         DOCS_DIR resources/docs
 )
 
-include(FindGeant4.cmake)
-include(FindCLHEP.cmake)
+# include(FindGeant4.cmake)
+# include(FindCLHEP.cmake)
 
 SET(LIB_${PROJECT_NAME}_SOURCEFILES
 
@@ -21,7 +21,8 @@ SET(LIB_${PROJECT_NAME}_SOURCEFILES
         private/I3G4PropModule.cxx
 
         # Core g4prop
-
+        public/g4prop/*.hh
+        private/g4prop/*.hh
         # Public Includes
 )
 
@@ -30,7 +31,7 @@ SET(LIB_${PROJECT_NAME}_PYBINDINGS_SOURCEFILES
 )
 
 SET(LIB_${PROJECT_NAME}_PROJECTS
-        serialization icetray dataclasses phys-services simclasses clsim
+        serialization icetray dataclasses phys-services simclasses
 )
 
 SET(LIB_${PROJECT_NAME}_TOOLS python boost clhep geant4)

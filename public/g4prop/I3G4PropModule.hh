@@ -3,7 +3,7 @@
 
 #include "icetray/I3ConditionalModule.h"
 #include "icetray/I3Module.h"
-#include "g4prop/G4Prop.hh"
+#include <g4prop/G4Prop.hh>
 #include <boost/bimap.hpp>
 
 class I3G4PropModule : public I3ConditionalModule

@@ -21,8 +21,8 @@ SET(LIB_${PROJECT_NAME}_SOURCEFILES
         private/I3G4PropModule.cxx
 
         # Core g4prop
-        public/g4prop/*.hh
-        private/g4prop/*.hh
+        # public/g4prop/*.hh
+        # private/g4prop/*.hh
         # Public Includes
 )
 

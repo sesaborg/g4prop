@@ -3,9 +3,6 @@ i3_project(g4prop
         DOCS_DIR resources/docs
 )
 
-# include(FindGeant4.cmake)
-# include(FindCLHEP.cmake)
-
 SET(LIB_${PROJECT_NAME}_SOURCEFILES
 
         # Geant4 Files

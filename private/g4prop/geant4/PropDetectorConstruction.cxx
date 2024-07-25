@@ -1,4 +1,4 @@
-#include "PropDetectorConstruction.hh"
+#include "g4prop/geant4/PropDetectorConstruction.hh"
 #include "G4NistManager.hh"
 #include "G4Material.hh"
 #include "G4Orb.hh"

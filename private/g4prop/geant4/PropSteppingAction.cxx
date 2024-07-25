@@ -1,4 +1,4 @@
-#include "PropSteppingAction.hh"
+#include "g4prop/geant4/PropSteppingAction.hh"
 #include "G4Step.hh"
 #include "G4TrackStatus.hh"
 #include "G4SteppingManager.hh"

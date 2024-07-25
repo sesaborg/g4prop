@@ -1,4 +1,4 @@
-#include "PropRunAction.hh"
+#include "g4prop/geant4/PropRunAction.hh"
 
 using namespace G4Prop;
 

@@ -1,13 +1,11 @@
 #include "dataclasses/physics/I3MCTree.h"
 #include "dataclasses/physics/I3MCTreeUtils.h"
-#include "g4prop/G4Prop.hh"
 #include "icetray/I3Module.h"
 #include "g4prop/I3G4PropModule.hh"
 #include "G4ParticleDefinition.hh"
 #include <boost/foreach.hpp>
 #include "G4SystemOfUnits.hh"
 #include "G4OpticalParameters.hh"
-#include "g4prop/PropEventAction.hh"
 
 typedef I3G4PropModule g4prop;
 namespace

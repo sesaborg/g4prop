@@ -1,4 +1,4 @@
-#include "g4prop/PropTrajectory.hh"
+#include "g4prop/geant4/PropTrajectory.hh"
 #include "G4AttDef.hh"
 #include "G4AttDefStore.hh"
 #include "G4AttValue.hh"

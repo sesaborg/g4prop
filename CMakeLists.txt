@@ -6,21 +6,14 @@ i3_project(g4prop
 SET(LIB_${PROJECT_NAME}_SOURCEFILES
 
         # Geant4 Files
-        private/g4prop/PropDetectorConstruction.cxx
-        private/g4prop/PropRunAction.cxx
-        private/g4prop/PropStackingAction.cxx
-        private/g4prop/PropSteppingAction.cxx
-        private/g4prop/PropTrajectory.cxx
+        private/g4prop/geant4/PropDetectorConstruction.cxx
+        private/g4prop/geant4/PropRunAction.cxx
+        private/g4prop/geant4/PropStackingAction.cxx
+        private/g4prop/geant4/PropSteppingAction.cxx
+        private/g4prop/geant4/PropTrajectory.cxx
 
         # Icetray-specific bindings
-        private/I3G4PropParticleTree.cxx
-        private/I3G4PropParticleTranslator.cxx
-        private/I3G4PropModule.cxx
-
-        # Core g4prop
-        # public/g4prop/*.hh
-        # private/g4prop/*.hh
-        # Public Includes
+        private/g4prop/I3G4PropModule.cxx
 )
 
 SET(LIB_${PROJECT_NAME}_PYBINDINGS_SOURCEFILES
@@ -38,9 +31,3 @@ i3_add_library(${PROJECT_NAME}
         USE_TOOLS ${LIB_${PROJECT_NAME}_TOOLS}
         USE_PROJECTS ${LIB_${PROJECT_NAME}_PROJECTS}
 )
-
-#i3_add_pybindings(g4prop
-#        ${LIB_${PROJECT_NAME}_PYBINDINGS_SOURCEFILES}
-#        USE_TOOLS boost python
-#        USE_PROJECTS serialization icetray dataclasses g4prop
-#)

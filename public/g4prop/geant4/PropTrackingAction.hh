@@ -5,7 +5,7 @@
 #include "globals.hh"
 #include "G4Types.hh"
 #include "boost/shared_ptr.hpp"
-#include "g4prop/PropTrajectory.hh"
+#include "g4prop/geant4/PropTrajectory.hh"
 
 namespace G4Prop
 {

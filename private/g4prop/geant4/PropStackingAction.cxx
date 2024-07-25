@@ -1,4 +1,4 @@
-#include "PropStackingAction.hh"
+#include "g4prop/geant4/PropStackingAction.hh"
 #include "G4ClassificationOfNewTrack.hh"
 #include "G4Track.hh"
 #include "G4VProcess.hh"

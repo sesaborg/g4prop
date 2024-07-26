@@ -30,6 +30,8 @@ public:
         AddParameter("ReserveLength",
                      "Number of Tracks/Particles to allocate space for at a time in their respective vectors.",
                      reserveLength_);
+
+        AddOutBox("OutBox");
     }
 
     virtual ~I3G4PropModule();

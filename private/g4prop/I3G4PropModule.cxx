@@ -293,6 +293,8 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                             G4ThreeVector g4dir = trajectory->GetFinalMomentumDirection();
                             I3Direction i3dir = I3Direction(g4dir.getX(), g4dir.getY(), g4dir.getZ());
                             I3Particle particle(i3pos, i3dir, trajectory->GetFinalGlobalTime() / CLHEP::ns * I3Units::ns);
+                            // Assuming all the particles are in the ice
+                            particle.SetLocationType(I3Particle::LocationType::InIce);
                             particle.SetEnergy(trajectory->GetFinalKineticEnergy() / CLHEP::GeV * I3Units::GeV);
                             particle.SetPdgEncoding(trajectory->GetPDGEncoding());
                             particleToTrackMap.insert({particle.GetID(), trajectory->GetTrackID()});

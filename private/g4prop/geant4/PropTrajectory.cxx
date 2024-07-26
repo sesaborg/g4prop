@@ -17,6 +17,7 @@ PropTrajectory::PropTrajectory(const G4Track *aTrack)
     : G4Trajectory(aTrack)
 {
     fFinalKineticEnergy = aTrack->GetKineticEnergy(); // Ok maybe this is supposed to be fInitialKineticEnergy...
+    fTrackLength = aTrack->GetTrackLength();
 
     fpPointsContainer = new std::vector<G4VTrajectoryPoint *>;
     fpPointsContainer->push_back(new G4TrajectoryPoint(aTrack->GetPosition()));
@@ -25,6 +26,7 @@ PropTrajectory::PropTrajectory(const G4Track *aTrack)
 PropTrajectory::PropTrajectory(PropTrajectory &right) : G4Trajectory(right)
 {
     fFinalKineticEnergy = right.fFinalKineticEnergy;
+    fTrackLength = right.fTrackLength;
     fpPointsContainer = new std::vector<G4VTrajectoryPoint *>;
     for (auto &i : *right.fpPointsContainer)
     {
@@ -54,6 +56,7 @@ void PropTrajectory::AppendStep(const G4Step *aStep)
     if (track->GetCurrentStepNumber() > 0)
     {
         fFinalKineticEnergy = postStepPoint->GetKineticEnergy(); // aStep->GetPreStepPoint()->GetKineticEnergy() - aStep->GetTotalEnergyDeposit();
+        fTrackLength = track->GetTrackLength();
         fFinalMomentumDirection = postStepPoint->GetMomentumDirection();
         fFinalGlobalTime = postStepPoint->GetGlobalTime();
     }
@@ -78,7 +81,7 @@ void PropTrajectory::MergeTrajectory(G4VTrajectory *secondTrajectory)
 
 void PropTrajectory::ShowTrajectory(std::ostream &os) const
 {
-    G4VTrajectory::ShowTrajectory(os);
+    // G4VTrajectory::ShowTrajectory(os);
 }
 
 void PropTrajectory::DrawTrajectory() const

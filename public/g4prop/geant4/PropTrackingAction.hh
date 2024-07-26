@@ -60,9 +60,9 @@ namespace G4Prop
 				if (fTracks.size() == fTracks.capacity())
 				{
 					G4cout << "Reserving more memory for fTracks" << G4endl;
-					G4cout << fTracks.capacity() << G4endl;
+					G4cout << "Old Capacity: " << fTracks.capacity() << G4endl;
 					fTracks.reserve((size_t)(fTracks.capacity() * 2));
-					G4cout << fTracks.capacity() << G4endl;
+					G4cout << "New Capacity: " << fTracks.capacity() << G4endl;
 				}
 				// G4cout << "New Track!" << G4endl;
 				G4Track *newTrack = new G4Track(*track);

@@ -16,6 +16,8 @@ namespace
 I3G4PropModule::~I3G4PropModule()
 {
     log_info("Destroying g4prop.");
+    delete G4Prop::randomEngine;
+    delete G4Prop::runManager;
 }
 
 void I3G4PropModule::Configure()
@@ -295,6 +297,15 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                             particle.SetPdgEncoding(trajectory->GetPDGEncoding());
                             particleToTrackMap.insert({particle.GetID(), trajectory->GetTrackID()});
                             particleMap.insert({particle.GetID(), particle});
+                        }
+                    }
+
+                    for (auto &trajectory : trajectories)
+                    {
+                        // If a trajectory has secondaries associated with it, assume it's finished and assign a track length to its I3Particle.
+                        if (trajectorySecondaryMap.at(trajectory->GetTrackID())->size() > 0)
+                        {
+                            particleMap.at(particleToTrackMap.right.at(trajectory->GetTrackID())).SetLength(trajectory->GetTrackLength() / CLHEP::m * I3Units::m);
                         }
                     }
 

@@ -27,9 +27,4 @@ void PropSteppingAction::UserSteppingAction(const G4Step *step)
 
 		// I3MCTree goes here
 	}
-
-	if (track->GetTrackID() == 1)
-	{
-		G4cout << step->GetSecondary()->size() << G4endl;
-	}
 };

@@ -35,6 +35,7 @@ public:
     inline G4ThreeVector GetFinalPosition() const { return fpPointsContainer->back()->GetPosition(); }
     inline G4double GetFinalGlobalTime() const { return fFinalGlobalTime; }
     inline G4TrajectoryPoint *GetFinalPoint() const { return (G4TrajectoryPoint *)(fpPointsContainer->back()); }
+    inline G4double GetTrackLength() const { return fTrackLength; }
 
     // Get methods for HepRep style attributes
     //
@@ -48,6 +49,7 @@ private:
     G4double fFinalGlobalTime = 0.0;
     G4int fTrackID = 0;
     G4int fParentID = 0;
+    G4double fTrackLength = 0.0;
 };
 
 // extern G4TRACKING_DLL G4Allocator<PropTrajectory> *&aPropTrajectoryAllocator();

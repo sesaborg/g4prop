@@ -347,7 +347,8 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
         }
     }
 
-    frame->Put("G4PropI3MCTree", newI3MCTree);
+    frame->Delete("I3MCTree");
+    frame->Put("I3MCTree", newI3MCTree);
     log_info("Pushing DAQ Frame.");
     PushFrame(frame);
     return;

@@ -38,12 +38,12 @@ public:
 
     virtual void Configure();
 
-    virtual void Process();
+    // virtual void Process();
 
-    virtual void Finish();
+    // virtual void Finish();
 
     // Will want an overload that lets users provide a custom physics list.
-    void ConfigureGeant4();
+    // void ConfigureGeant4();
 
     void DAQ(I3FramePtr frame);
 

@@ -38,36 +38,36 @@ void I3G4PropModule::Configure()
     }
 }
 
-void I3G4PropModule::Finish()
-{
-    log_info("g4prop has finished");
-}
+// void I3G4PropModule::Finish()
+// {
+//     log_info("g4prop has finished");
+// }
 
-void I3G4PropModule::Process()
-{
-    log_info("g4prop Process()");
-    I3FramePtr frame = PopFrame();
-    if (!frame)
-        I3FramePtr frame(new I3Frame(I3Frame::DAQ));
+// void I3G4PropModule::Process()
+// {
+//     log_info("g4prop Process()");
+//     I3FramePtr frame = PopFrame();
+//     if (!frame)
+//         I3FramePtr frame(new I3Frame(I3Frame::DAQ));
 
-    log_info("I3Vector<double> test");
-    auto test = new I3VectorDouble(std::size_t(4));
-    (*test)[0] = 214.2;
-    (*test)[1] = 242.0;
-    (*test)[2] = 04.2;
-    (*test)[3] = 1.1;
-    log_info("I3Vector<double> test Put");
-    frame->Put("TestVector", I3VectorDoublePtr(test));
+//     log_info("I3Vector<double> test");
+//     auto test = new I3VectorDouble(std::size_t(4));
+//     (*test)[0] = 214.2;
+//     (*test)[1] = 242.0;
+//     (*test)[2] = 04.2;
+//     (*test)[3] = 1.1;
+//     log_info("I3Vector<double> test Put");
+//     frame->Put("TestVector", I3VectorDoublePtr(test));
 
-    if (frame->GetStop() == I3Frame::DAQ)
-    {
-        DAQ(frame);
-        return;
-    }
+//     if (frame->GetStop() == I3Frame::DAQ)
+//     {
+//         DAQ(frame);
+//         return;
+//     }
 
-    PushFrame(frame);
-    return;
-}
+//     PushFrame(frame);
+//     return;
+// }
 
 void I3G4PropModule::DAQ(I3FramePtr frame)
 {
@@ -295,6 +295,7 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                             I3Particle particle(i3pos, i3dir, trajectory->GetFinalGlobalTime() / CLHEP::ns * I3Units::ns);
                             // Assuming all the particles are in the ice
                             particle.SetLocationType(I3Particle::LocationType::InIce);
+                            particle.SetShape(I3Particle::ParticleShape::MCTrack);
                             particle.SetEnergy(trajectory->GetFinalKineticEnergy() / CLHEP::GeV * I3Units::GeV);
                             particle.SetPdgEncoding(trajectory->GetPDGEncoding());
                             particleToTrackMap.insert({particle.GetID(), trajectory->GetTrackID()});
@@ -353,28 +354,6 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
     frame->Put("I3MCTree", newI3MCTree);
     log_info("Pushing DAQ Frame.");
     PushFrame(frame);
-    return;
-
-    // void I3G4PropModule::InsertToTree(boost::shared_ptr<I3MCTree> &tree, const std::map<G4int, std::vector<G4int>> *trackToSecondariesMap, const boost::bimap<I3ParticleID, G4int> *particleToTrackMap, const std::map<I3ParticleID, I3Particle> *particleIDtoParticleMap, const I3ParticleID &id)
-    // {
-    //     log_info("Insert To Tree");
-    //     G4int trackID = particleToTrackMap->left.at(id);
-    //     std::vector<G4int> secondaryTrackIDs = trackToSecondariesMap->at(trackID);
-    //     log_info("%i %lu", trackID, secondaryTrackIDs.size());
-    //     std::vector<I3Particle> secondaryParticles;
-    //     BOOST_FOREACH (auto &secondaryTrackID, secondaryTrackIDs)
-    //     {
-    //         log_info("%i", secondaryTrackID);
-    //         secondaryParticles.insert(secondaryParticles.end(), particleIDtoParticleMap->at(particleToTrackMap->right.at(secondaryTrackID)));
-    //     }
-
-    //     tree->append_children(id, secondaryParticles);
-
-    //     BOOST_FOREACH (auto &secondaryParticle, secondaryParticles)
-    //     {
-    //         InsertToTree(tree, trackToSecondariesMap, particleToTrackMap, particleIDtoParticleMap, secondaryParticle.GetID());
-    //     }
-    // }
 }
 bool I3G4PropModule::ShouldDoProcess(I3FramePtr frame)
 {

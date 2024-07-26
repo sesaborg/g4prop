@@ -295,9 +295,12 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                             I3Particle particle(i3pos, i3dir, trajectory->GetFinalGlobalTime() / CLHEP::ns * I3Units::ns);
                             // Assuming all the particles are in the ice
                             particle.SetLocationType(I3Particle::LocationType::InIce);
-                            particle.SetShape(I3Particle::ParticleShape::MCTrack);
                             particle.SetEnergy(trajectory->GetFinalKineticEnergy() / CLHEP::GeV * I3Units::GeV);
                             particle.SetPdgEncoding(trajectory->GetPDGEncoding());
+                            if (particle.GetType() == I3Particle::ParticleType::EMinus)
+                            {
+                                particle.SetShape(I3Particle::ParticleShape::Cascade);
+                            }
                             particleToTrackMap.insert({particle.GetID(), trajectory->GetTrackID()});
                             particleMap.insert({particle.GetID(), particle});
                         }

@@ -21,7 +21,7 @@ SET(LIB_${PROJECT_NAME}_PYBINDINGS_SOURCEFILES
 )
 
 SET(LIB_${PROJECT_NAME}_PROJECTS
-        serialization icetray dataclasses phys-services simclasses
+        serialization icetray dataclasses phys-services simclasses sim-services
 )
 
 SET(LIB_${PROJECT_NAME}_TOOLS python boost clhep geant4)

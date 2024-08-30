@@ -18,6 +18,7 @@ PropTrajectory::PropTrajectory(const G4Track *aTrack)
 {
     fFinalKineticEnergy = aTrack->GetKineticEnergy(); // Ok maybe this is supposed to be fInitialKineticEnergy...
     fTrackLength = aTrack->GetTrackLength();
+    fFinalGlobalTime = aTrack->GetGlobalTime();
 
     fpPointsContainer = new std::vector<G4VTrajectoryPoint *>;
     fpPointsContainer->push_back(new G4TrajectoryPoint(aTrack->GetPosition()));
@@ -27,6 +28,7 @@ PropTrajectory::PropTrajectory(PropTrajectory &right) : G4Trajectory(right)
 {
     fFinalKineticEnergy = right.fFinalKineticEnergy;
     fTrackLength = right.fTrackLength;
+    fFinalGlobalTime = right.fFinalGlobalTime;
     fpPointsContainer = new std::vector<G4VTrajectoryPoint *>;
     for (auto &i : *right.fpPointsContainer)
     {

@@ -6,6 +6,7 @@
 #include <boost/foreach.hpp>
 #include "G4SystemOfUnits.hh"
 #include "G4OpticalParameters.hh"
+#include "sim-services/I3SimConstants.h"
 
 typedef I3G4PropModule g4prop;
 namespace
@@ -292,15 +293,40 @@ void I3G4PropModule::DAQ(I3FramePtr frame)
                                                           g4pos.getZ() / CLHEP::m * I3Units::m + i3posOriginal.GetZ());
                             G4ThreeVector g4dir = trajectory->GetFinalMomentumDirection();
                             I3Direction i3dir = I3Direction(g4dir.getX(), g4dir.getY(), g4dir.getZ());
+                            // G4cout << trajectory->GetFinalGlobalTime() / CLHEP::ns * I3Units::ns << G4endl;
                             I3Particle particle(i3pos, i3dir, trajectory->GetFinalGlobalTime() / CLHEP::ns * I3Units::ns);
                             // Assuming all the particles are in the ice
                             particle.SetLocationType(I3Particle::LocationType::InIce);
                             particle.SetEnergy(trajectory->GetFinalKineticEnergy() / CLHEP::GeV * I3Units::GeV);
                             particle.SetPdgEncoding(trajectory->GetPDGEncoding());
-                            if (particle.GetType() == I3Particle::ParticleType::EMinus)
+                            I3Particle::ParticleType particleList[] = {I3Particle::EMinus, I3Particle::EPlus, I3Particle::Pi0, I3Particle::PiMinus, I3Particle::PiPlus, I3Particle::MuMinus, I3Particle::MuPlus, I3Particle::TauMinus, I3Particle::TauPlus};
+
+                            bool supported = false;
+                            for (auto &type : I3SimConstants::ShowerParameters::GetSupportedTypes())
                             {
-                                particle.SetShape(I3Particle::ParticleShape::Cascade);
+                                if (particle.GetType() == type)
+                                {
+                                    supported = true;
+                                    break;
+                                }
                             }
+
+                            if (!supported)
+                            {
+                                log_info("%s is not supported.", particle.GetTypeString().c_str());
+                                if (I3SimConstants::IsHadron(particle.GetType()))
+                                {
+                                    log_info("... but it is a hadron.");
+                                    particle.SetType(I3Particle::Hadrons);
+                                }
+                                else
+                                {
+                                    log_info("... and is some unknown particle from Geant4.");
+                                    particle.SetType(I3Particle::unknown);
+                                }
+                                // Otherwise just leave the PDG encoding
+                            }
+
                             particleToTrackMap.insert({particle.GetID(), trajectory->GetTrackID()});
                             particleMap.insert({particle.GetID(), particle});
                         }

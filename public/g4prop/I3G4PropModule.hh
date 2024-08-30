@@ -17,6 +17,7 @@ public:
             "/tracking/verbose 0",
             "/process/optical/cerenkov/setTrackSecondariesFirst false", // Tracking secondaries first splits tracks into multiple parts with identical IDs, not ideal for back conversion to I3MCTrees
         });
+
         AddParameter("Geant4Commands",
                      "Commands to pass to the Geant4 UI manager.",
                      uiCommands_);
@@ -25,11 +26,6 @@ public:
         AddParameter("RelativeCutoff",
                      "The ratio between the particle cutoff energy and the initial particle energy.",
                      relativeCutoff_);
-
-        reserveLength_ = 10000;
-        AddParameter("ReserveLength",
-                     "Number of Tracks/Particles to allocate space for at a time in their respective vectors.",
-                     reserveLength_);
 
         storeTrajectory_ = 3;
         AddParameter("G4StoreTrajectory",
@@ -60,7 +56,6 @@ private:
     I3G4PropModule &operator=(const I3G4PropModule &);
     bool configured = false;
     std::vector<std::string> uiCommands_;
-    size_t reserveLength_;
     double relativeCutoff_;
     G4int storeTrajectory_;
     // void InsertToTree(boost::shared_ptr<I3MCTree> &, const std::map<G4int, std::vector<G4int>> *, const boost::bimap<I3ParticleID, G4int> *, const std::map<I3ParticleID, I3Particle> *, const I3ParticleID &);

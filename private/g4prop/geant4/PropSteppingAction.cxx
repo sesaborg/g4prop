@@ -19,12 +19,10 @@ void PropSteppingAction::UserSteppingAction(const G4Step *step)
 	G4Track *track = step->GetTrack();
 	G4double kineticEnergy = track->GetKineticEnergy();
 
-	// There was a reason why I excluded kineticEnergy = 0, maybe because it killed decays?
+	// There was a reason why I excluded kineticEnergy = 0, I think it was killing decays?
 	if (kineticEnergy < fKineticEnergyMin && kineticEnergy > 0)
 	{
 		fCulledEnergy += kineticEnergy;
 		track->SetTrackStatus(fStopAndKill);
-
-		// I3MCTree goes here
 	}
 };

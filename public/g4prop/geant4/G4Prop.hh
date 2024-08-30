@@ -34,10 +34,9 @@ namespace G4Prop
 	/// @note @ref ConfigureGeant4() needs to be called before initializing or running Geant4.
 	/// @param particleGun The G4ParticleGun to have shot.
 	/// @param commandList The UI commands to pass to Geant4.
-	/// @param storeTrajectory A G4int specifying how trajectories should be stored.
-	void RunGeant4(G4ParticleGun *particleGun, std::vector<std::string> commandList, G4int storeTrajectory)
+	/// @param storeTrajectory A G4int specifying how trajectories should be stored. The default indicates the G4PropTrajectory should be used.
+	void RunGeant4(G4ParticleGun *particleGun, std::vector<std::string> commandList, G4int storeTrajectory = 3)
 	{
-		G4cout << "In!" << G4endl;
 		// // For now ignore all args
 
 		// G4VModularPhysicsList *p = new FTFP_BERT(0);
@@ -75,7 +74,6 @@ namespace G4Prop
 			uiManager->ApplyCommand(G4String(command));
 			G4cout << command << G4endl;
 		}
-		// exit(-25);
 		// uiManager->ApplyCommand("/run/verbose 3");
 		// uiManager->ApplyCommand("/event/verbose 1");
 		// uiManager->ApplyCommand("/tracking/verbose 2");
@@ -86,8 +84,8 @@ namespace G4Prop
 		uiManager->ApplyCommand("/run/beamOn");
 	}
 
-	/// @brief
-	/// @param cutoff
+	/// @brief (Re)initializes the G4RunManager and G4VisManager, with a new cutoff.
+	/// @param cutoff The fractional cutoff, daughter particles are killed when their kinetic energy fall below the initial particle's kinetic energy times the cutoff value.
 	void ConfigureGeant4(G4double cutoff)
 	{
 		relativeCutoff = cutoff;
@@ -128,24 +126,26 @@ namespace G4Prop
 		visManager->Initialize();
 	}
 
+	/// @brief Gets all tracks from an event (if stored).
+	/// @return Vector of track pointers, which are deleted when the runManager is deleted
 	std::vector<G4Track *> GetTracks()
 	{
 		return ((PropTrackingAction *)(runManager->GetUserTrackingAction()))->GetTracks();
 	}
 
+	/// @brief Gets a reference to the map between particle IDs and the IDs of their secondaries.
+	/// @return Map which maps particle IDs to a vector (pointer) containing child particle IDs
 	std::map<G4int, boost::shared_ptr<std::vector<G4int>>> &GetTrackToSecondariesMap()
 	{
 		return ((PropTrackingAction *)(runManager->GetUserTrackingAction()))->GetTrackToSecondariesMap();
 	}
 
+	/// @brief Gets all the trajectories (if saved).
+	/// @return A vector of pointers to the g4prop-specific trajectory class from the most recent event.
 	std::vector<boost::shared_ptr<PropTrajectory>> &GetTrajectories()
 	{
 		return ((PropEventAction *)(runManager->GetUserEventAction()))->GetTrajectories();
 	}
-
-	// G4RunManager *GetG4RunManager() { return runManager; }
-	// G4UImanager *GetG4UImanager() { return uiManager; }
-	// G4VisManager *GetG4VisManager() { return visManager; }
 };
 namespace G4Prop
 {
@@ -162,28 +162,10 @@ namespace G4Prop
 		double Time;					 // CHLEP::ns
 	};
 
-	void LoadParticleGuns(std::vector<G4PropParticleProperties> particlesToShoot, std::vector<G4ParticleGun *> &particleGuns)
-	{
-		for (size_t i = 0; i < particlesToShoot.size(); i++)
-		{
-			auto particle = particlesToShoot[i];
-			G4cout << particlesToShoot[i].Id << G4endl;
-			G4cout << G4ParticleTable::GetParticleTable()->FindParticle(particlesToShoot[i].EncodingPDG)->GetParticleName() << G4endl;
-
-			G4ParticleGun *source = new G4ParticleGun();
-			source->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle(particle.EncodingPDG));
-			source->SetNumberOfParticles(1);
-			source->SetParticleEnergy(particle.Energy);
-			source->SetParticleTime(particle.Time);
-			// Instead of setting the particle where it should belong w.r.t to the external environment, just put it in the middle of a generic volume.
-			source->SetParticlePosition(G4ThreeVector(0, 0, 0));
-			source->SetParticleMomentumDirection(particle.MomentumDirection);
-
-			particleGuns.insert(particleGuns.end(), source);
-		}
-	}
-
-	void LoadParticleGun(G4PropParticleProperties particleToShoot, G4ParticleGun *&particleGun)
+	/// @brief A function that configures a particle to be fired from a Geant4 particle gun.
+	/// @param particleToShoot The particle to be shot.
+	/// @param particleGun The G4ParticleGun to be loaded.
+	void LoadParticleGun(const G4PropParticleProperties &particleToShoot, G4ParticleGun *particleGun)
 	{
 		auto particle = particleToShoot;
 		G4cout << particleToShoot.Id << G4endl;
@@ -198,7 +180,23 @@ namespace G4Prop
 		source->SetParticlePosition(G4ThreeVector(0, 0, 0));
 		source->SetParticleMomentumDirection(particle.MomentumDirection);
 
+		// Assuming particle polarization doesn't matter...
+		source->SetParticlePolarization(G4RandomDirection());
+
 		particleGun = source;
+	}
+
+	/// @brief A convenient function that configures a list of particles to be fired from Geant4 particle guns.
+	/// @param particlesToShoot The list of particles to be shot (note you must construct G4PropParticleProperties yourself),
+	/// @param particleGuns A reference to your vector of G4ParticleGun pointers. The new particle guns are appended to this list.
+	void LoadParticleGuns(const std::vector<G4PropParticleProperties> particlesToShoot, std::vector<G4ParticleGun *> &particleGuns)
+	{
+		for (size_t i = 0; i < particlesToShoot.size(); i++)
+		{
+			G4ParticleGun *source;
+			LoadParticleGun(particlesToShoot[i], source);
+			particleGuns.insert(particleGuns.end(), source);
+		}
 	}
 }
 #endif // G4PROP_HH

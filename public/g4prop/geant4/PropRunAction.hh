@@ -5,6 +5,7 @@
 #define PROPRUNACTION_H
 namespace G4Prop
 {
+    /// @brief A concrete implementation of G4UserRunAction that doesn't do anything unique currently.
     class PropRunAction : public G4UserRunAction
     {
     public:

@@ -6,16 +6,19 @@
 
 namespace G4Prop
 {
+    /// @brief A G4UserEventAction that constructs the trajectory vector after an event, if configured to do so.
     class PropEventAction : public G4UserEventAction
     {
     public:
         PropEventAction() : G4UserEventAction() {};
         ~PropEventAction() override
         {
-            G4cout << "PropEventAction has been deleted." << G4endl;
-            exit(-25);
+            // G4cout << "PropEventAction has been deleted." << G4endl;
+            // exit(-25);
         };
 
+        /// @brief Builds the trajectory vector after an event.
+        /// @param anEvent 
         void EndOfEventAction(const G4Event *anEvent) override
         {
             // fpEventManager->KeepTheCurrentEvent();
@@ -31,7 +34,6 @@ namespace G4Prop
 
         std::vector<boost::shared_ptr<PropTrajectory>> &GetTrajectories() { return fTrajectoryVector; }
 
-        // private:
         std::vector<boost::shared_ptr<PropTrajectory>> fTrajectoryVector = std::vector<boost::shared_ptr<PropTrajectory>>();
     };
 }

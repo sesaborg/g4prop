@@ -9,83 +9,30 @@
 
 namespace G4Prop
 {
+	/// @brief A G4UserTrackingAction that kills secondary particles if their kinetic energy falls below a cutoff.
+	/// Also saves tracks or tracjectories according to how it is configured.
 	class PropTrackingAction : public G4UserTrackingAction
 	{
 	public:
-		PropTrackingAction(G4double kineticEnergyMin, G4int storeTrajectory) : G4UserTrackingAction()
-		{
-			fStoreTrajectory = storeTrajectory;
-			fKineticEnergyMin = kineticEnergyMin;
-		}
+		PropTrackingAction(G4double kineticEnergyMin, G4int storeTrajectory);
 
-		~PropTrackingAction() override {};
+		~PropTrackingAction() override;
 
 	public:
-		void PreUserTrackingAction(const G4Track *track) override
-		{
-			fpTrackingManager->SetStoreTrajectory(1);
-			fpTrackingManager->SetTrajectory(new PropTrajectory(track));
-		}
-		void PostUserTrackingAction(const G4Track *track) override
-		{
-			const G4TrackVector *secondaries = track->GetStep()->GetSecondary();
-			if (track->GetTrackID() == 1)
-			{
-				G4cout << "Post User Tracking Action secondaries->size(): " << secondaries->size() << G4endl;
-			}
+		/// @brief Configures the tracking manager to store the trajectory of the track as a PropTrajectory.
+		/// @param track
+		void PreUserTrackingAction(const G4Track *track) override;
 
-			for (auto secondaryTrack : *secondaries)
-			{
-				G4double kineticEnergy = secondaryTrack->GetKineticEnergy();
+		/// @brief Evaluates whether to kill the secondaries of the track, then copies track information if trajectory information isn't saved.
+		/// @param track
+		void PostUserTrackingAction(const G4Track *track) override;
 
-				if (kineticEnergy < fKineticEnergyMin)
-				{
-					fCulledEnergy += kineticEnergy;
-					secondaryTrack->SetTrackStatus(fStopAndKill);
-				}
-			}
-
-			// Only if we aren't storing trajectories should we create our own list of particles.
-			if (fStoreTrajectory == 0)
-			{
-				if (track->GetTrackID() > 1)
-				{
-					// Find the parent of this track's list of secondaries, then insert this track's ID into that list.
-					// It's done this way because the secondaries don't get their trackID's until after they are initialized.
-					// G4cout << "TrackID: " << track->GetTrackID() << " Parent's TrackID: " << track->GetParentID() << G4endl;
-					boost::shared_ptr<std::vector<G4int>> &parentSecondaries = fTrackToSecondariesMap.at(track->GetParentID());
-					parentSecondaries->push_back(track->GetTrackID());
-				}
-
-				if (fTracks.size() == fTracks.capacity())
-				{
-					G4cout << "Reserving more memory for fTracks" << G4endl;
-					G4cout << "Old Capacity: " << fTracks.capacity() << G4endl;
-					fTracks.reserve((size_t)(fTracks.capacity() * 2));
-					G4cout << "New Capacity: " << fTracks.capacity() << G4endl;
-				}
-				// G4cout << "New Track!" << G4endl;
-				G4Track *newTrack = new G4Track(*track);
-				newTrack->SetKineticEnergy(track->GetKineticEnergy());
-				newTrack->SetParentID(track->GetParentID());
-				newTrack->SetTrackID(track->GetTrackID());
-				newTrack->SetPosition(track->GetPosition());
-				newTrack->SetMomentumDirection(track->GetMomentumDirection());
-				newTrack->SetGlobalTime(track->GetGlobalTime());
-				fTracks.push_back(newTrack);
-
-				// Add a pair to the secondaries map with an already initialized vector to be populated by the secondaries later on
-				// Doesn't work if the secondaries get tracked before the primary finishes.
-				// G4cout << "New Secondaries: " << secondaries->size() << G4endl;
-				auto newSecondaries = boost::shared_ptr<std::vector<G4int>>(new std::vector<G4int>());
-				newSecondaries->reserve(secondaries->size());
-				// G4cout << "Trying to Insert into fTrackToSecondariesMap!" << G4endl;
-				fTrackToSecondariesMap.insert({newTrack->GetTrackID(), newSecondaries});
-				// G4cout << "Inserted into fTrackToSecondariesMap!" << G4endl;
-			}
-		}
-
+		/// @brief Sets the minimum kinetic energy to terminate tracks based off.
+		/// @param kineticEnergyMin The minimum kinetic energy cutoff.
 		void SetMinimumKineticEnergy(G4double KineticEnergyMin) { fKineticEnergyMin = KineticEnergyMin; }
+
+		/// @brief Gets the cumulative energy culled by artificially killing all the tracks of an event.
+		/// @return The cumulative culled energy.
 		G4double GetCulledEnergy() { return fCulledEnergy; }
 		std::vector<G4Track *> GetTracks() { return fTracks; }
 		std::map<G4int, boost::shared_ptr<std::vector<G4int>>> &GetTrackToSecondariesMap() { return fTrackToSecondariesMap; }

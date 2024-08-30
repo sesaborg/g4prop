@@ -6,27 +6,29 @@
 
 namespace G4Prop
 {
+	/// @brief A G4UserStackingAction that is currently empty.
 	class PropStackingAction : public G4UserStackingAction
 	{
 	public:
 		PropStackingAction();
 		~PropStackingAction() override;
 
+		/// @brief Custom Classification, if that's useful eventually.
+		/// @param track 
+		/// @return 
 		G4ClassificationOfNewTrack ClassifyNewTrack(const G4Track *track) override;
+
 		void NewStage() override
 		{
-			// ?
+			// You can put stacking logic in here (maybe to deal with Cerenkov photons)
 		}
 
 		void PrepareNewEvent() override
 		{
-			fCerenkovCount = 0;
-			fTrackCount = 0;
+			// Configure cool stacking variables here!
 		}
-
 	private:
-		G4int fCerenkovCount;
-		G4int fTrackCount;
+		// Variables go here
 	};
 }
 #endif // PROPSTACKINGACTION_H

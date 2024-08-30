@@ -4,7 +4,8 @@
 
 #ifndef PROPPRIMARYGENERATORACTION_H
 #define PROPPRIMARYGENERATORACTION_H
-
+namespace G4Prop{
+/// @brief A G4VUserPrimaryGeneratorAction that takes a G4ParticleGun pointer to generate a primary vertex. 
 class PropPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 {
 public:
@@ -14,28 +15,22 @@ public:
     }
     virtual ~PropPrimaryGeneratorAction()
     {
-        // Source is kept independent of the G4ParticleGun* vector
-        delete source;
     }
+
+    /// @brief Uses the loaded G4ParticleGun to generate the primary vertex.
+    /// @param event 
     virtual void GeneratePrimaries(G4Event *event)
     {
         event->SetEventID(eventID);
         eventID++;
-        // CLHEP::HepRandom::setTheSeed(eventID);
-        source->SetParticlePolarization(G4RandomDirection());
-        // source->SetParticleTime(0);
         source->GeneratePrimaryVertex(event);
     }
 
     void SetEventID(G4int ID) { eventID = ID; }
-    // void SetParticleEnergy(G4double Energy) { energy = Energy; }
-    // void SetParticleType(G4int Type) { type = Type; }
 
 private:
     G4ParticleGun *source;
     G4int eventID;
-    // G4double energy;
-    // G4int type;
 };
-
+}
 #endif // PROPPRIMARYGENERATORACTION_H

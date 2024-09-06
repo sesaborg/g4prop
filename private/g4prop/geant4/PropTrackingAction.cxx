@@ -3,6 +3,7 @@
 // #include "G4TrackStatus.hh"
 // #include "g4prop/G4PropParticleTree.hh"
 #include "g4prop/geant4/PropTrackingAction.hh"
+#include "G4TrackingManager.hh"
 
 using namespace G4Prop;
 

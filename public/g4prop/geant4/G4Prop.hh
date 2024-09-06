@@ -37,8 +37,6 @@ namespace G4Prop
 	/// @param storeTrajectory A G4int specifying how trajectories should be stored. The default indicates the G4PropTrajectory should be used.
 	void RunGeant4(G4ParticleGun *particleGun, std::vector<std::string> commandList, G4int storeTrajectory = 3)
 	{
-		// // For now ignore all args
-
 		// G4VModularPhysicsList *p = new FTFP_BERT(0);
 		// p->ReplacePhysics(new G4EmStandardPhysics_option4());
 
